@@ -1,0 +1,2383 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Painel Gerencial — Diretoria — Diretoria (Margem, Custos, Resultado)</title>
+<style>
+  :root{
+    --bg:#0b1020; --card:#111a33; --card2:#0f1730; --text:#e9edf7; --muted:#a8b1c7;
+    --ok:#35d07f; --warn:#ffcc66; --bad:#ff6b6b; --line:#223057; --accent:#7aa2ff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: radial-gradient(1200px 800px at 20% 10%, #1a2a6f33, transparent 60%),
+                radial-gradient(1000px 700px at 90% 20%, #7aa2ff22, transparent 55%),
+                var(--bg);
+    color:var(--text);
+  }
+  header{
+    position:sticky; top:0; z-index:10;
+    backdrop-filter: blur(10px);
+    background: linear-gradient(to bottom, rgba(11,16,32,.92), rgba(11,16,32,.65));
+    border-bottom: 1px solid rgba(122,162,255,.18);
+  }
+  .wrap{max-width:1200px; margin:0 auto; padding:18px 16px;}
+  .topbar{display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
+  .brand{display:flex; gap:10px; align-items:center;}
+  .dot{
+    width:14px; height:14px; border-radius:999px; background:var(--accent);
+    box-shadow: 0 0 0 4px rgba(122,162,255,.15);
+  }
+  h1{font-size:18px; margin:0; letter-spacing:.2px;}
+  .sub{font-size:12px; color:var(--muted); margin-top:2px;}
+  .controls{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  select, button{
+    background: rgba(17,26,51,.75);
+    color: var(--text);
+    border: 1px solid rgba(122,162,255,.22);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 13px;
+    outline:none;
+  }
+  button{cursor:pointer}
+  button:hover{border-color: rgba(122,162,255,.5)}
+  main{padding: 14px 0 28px;}
+  .grid{display:grid; gap:12px;}
+  .kpis{grid-template-columns: repeat(12, 1fr);}
+  .card{
+    background: linear-gradient(180deg, rgba(17,26,51,.92), rgba(15,23,48,.86));
+    border: 1px solid rgba(122,162,255,.16);
+    border-radius: 18px;
+    padding: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    min-height: 84px;
+  }
+  .span-3{grid-column: span 3;}
+  .span-4{grid-column: span 4;}
+  .span-5{grid-column: span 5;}
+  .span-6{grid-column: span 6;}
+  .span-7{grid-column: span 7;}
+  .span-8{grid-column: span 8;}
+  .span-12{grid-column: span 12;}
+
+  .label{color:var(--muted); font-size:12px;}
+  .value{font-size:22px; font-weight:700; margin-top:6px;}
+  .mini{font-size:12px; color:var(--muted); margin-top:6px; display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+  .pill{
+    font-size:11px; padding:4px 8px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.06);
+  }
+  .pill.ok{border-color: rgba(53,208,127,.35); color: #b7f7d2;}
+  .pill.warn{border-color: rgba(255,204,102,.35); color: #ffe4b3;}
+  .pill.bad{border-color: rgba(255,107,107,.35); color: #ffd0d0;}
+  .section-title{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    margin: 16px 0 10px;
+  }
+  .section-title h2{margin:0; font-size:14px; letter-spacing:.2px;}
+  .section-title .hint{font-size:12px; color:var(--muted);}
+  .tables{grid-template-columns: repeat(12, 1fr);}
+  table{width:100%; border-collapse:collapse; overflow:hidden; border-radius:14px;}
+  th,td{padding:10px 10px; text-align:left; border-bottom: 1px solid rgba(122,162,255,.12); font-size:13px;}
+  th{color: var(--muted); font-weight:600; background: rgba(122,162,255,.06);}
+  tr:hover td{background: rgba(122,162,255,.04);}
+  .right{text-align:right;}
+  .center{text-align:center;}
+  .progress{
+    height:10px; border-radius:999px; background: rgba(255,255,255,.08);
+    overflow:hidden; border: 1px solid rgba(255,255,255,.08);
+  }
+  .bar{height:100%; width:0%; border-radius:999px; background: linear-gradient(90deg, rgba(122,162,255,.95), rgba(53,208,127,.85));}
+  .badbar{background: linear-gradient(90deg, rgba(255,107,107,.95), rgba(255,204,102,.85));}
+  .note{
+    color: var(--muted); font-size:12px; line-height:1.4;
+  }
+  .two{
+    display:grid; grid-template-columns: 1fr 1fr; gap:12px;
+  }
+  @media (max-width: 980px){
+    .span-3,.span-4,.span-5,.span-6,.span-7,.span-8{grid-column: span 12;}
+    .two{grid-template-columns: 1fr;}
+  }
+
+  .sim-grid{display:grid; grid-template-columns: repeat(12,1fr); gap:12px;}
+  .range{width:100%}
+  .alert{
+    border-radius:16px; padding:12px 14px; border:1px solid rgba(255,107,107,.35);
+    background: rgba(255,107,107,.10);
+  }
+  .alert h3{margin:0 0 6px 0; font-size:14px}
+  .alert ul{margin:6px 0 0 18px; padding:0; color: rgba(233,237,247,.85); font-size:13px}
+  .kpi-rows{display:flex; flex-direction:column; gap:6px; margin-top:8px}
+  .kpi-row{display:flex; justify-content:space-between; gap:10px; font-size:13px; color: rgba(233,237,247,.88)}
+  .kpi-row span:first-child{color: var(--muted)}
+  .status-ok{color:#b7f7d2}
+  .status-bad{color:#ffd0d0}
+  /* Ajuste fino de alinhamento do DRE */
+  .dre-panel{
+    margin-top:0;
+    padding-top:14px;
+    padding-bottom:14px;
+  }
+
+  .divider{height:1px;background:rgba(255,255,255,.08);margin:12px 0;}
+  table.proj-table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:12px;}
+  table.proj-table thead th{position:sticky; top:0;}
+  .proj-summary{font-size:12px; color:var(--muted); display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+  .proj-scenarios{margin-top:10px}
+  .scenario-grid{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px}
+  @media (max-width: 1100px){ .scenario-grid{grid-template-columns:1fr} }
+  .scenario-card{background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:10px 12px}
+  .scenario-top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px}
+  .scenario-title{font-weight:800; font-size:13px}
+  .scenario-add{font-size:18px; font-weight:900; letter-spacing:.2px}
+  .scenario-sub{font-size:12px; color:var(--muted); margin-top:2px}
+  .scenario-badge{font-size:11px; font-weight:800; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.10)}
+  .scenario-badge.ok{background:rgba(46, 204, 113,.15); color:var(--good); border-color:rgba(46,204,113,.25)}
+  .scenario-badge.warn{background:rgba(255, 204, 102,.14); color:var(--warn); border-color:rgba(255,204,102,.22)}
+  .scenario-badge.bad{background:rgba(255, 107, 107,.12); color:var(--bad); border-color:rgba(255,107,107,.22)}
+
+
+  .col-stack{display:flex; flex-direction:column; gap:12px;}
+  .col-stack .card{width:100%;}
+
+/* --- Cenários (objetivo, 2 cards) --- */
+#projScenarios .scenario-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap:14px;
+}
+@media (max-width: 900px){
+  #projScenarios .scenario-grid{ grid-template-columns: 1fr; }
+}
+#projScenarios .scenario-sub{ opacity:.9; }
+
+
+.card-resultado {
+  margin-bottom: 18px;
+}
+
+
+.card-projecao {
+  margin-top: 24px;
+}
+
+
+
+/* --- Alavancas de Resultado --- */
+.side-by-side{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch}
+@media (max-width: 980px){.side-by-side{grid-template-columns:1fr}}
+.alav-header{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.alav-title{font-size:13px;color:var(--muted)}
+.alav-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.alav-rows{margin-top:10px;display:flex;flex-direction:column;gap:10px}
+.alav-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.alav-left{display:flex;gap:8px;flex-direction:column}
+.alav-left b{font-weight:700}
+.alav-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;text-align:right}
+.alav-note{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.35}
+.badge-mini{padding:5px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);font-size:11px;white-space:nowrap}
+.badge-ok{border-color:rgba(52,211,153,.35);color:#b7f7d2}
+.badge-warn{border-color:rgba(250,204,21,.35);color:#ffe9b3}
+.badge-bad{border-color:rgba(248,113,113,.35);color:#ffd0d0}
+
+</style>
+<style>
+.dre-positive {
+  color: #2ecc71;
+  font-weight: 700;
+}
+.dre-negative {
+  color: #e74c3c;
+  font-weight: 700;
+}
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const el = document.getElementById("dreResultadoFinal");
+  if (!el) return;
+
+  const value = el.innerText
+    .replace("R$", "")
+    .replace(/\./g, "")
+    .replace(",", ".")
+    .trim();
+
+  const num = parseFloat(value);
+
+  if (!isNaN(num)) {
+    el.classList.add(num >= 0 ? "dre-positive" : "dre-negative");
+  }
+});
+</script>
+
+<style>
+/* Ajuste fino — Alavancas de Resultado */
+.alavancas-card {
+  font-size: 14px;
+}
+.alavancas-card h3,
+.alavancas-card .alav-title {
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+.alavancas-card .alav-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+.alavancas-card .alav-item:not(:last-child) {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.alavancas-card .alav-value {
+  font-size: 15px;
+  font-weight: 600;
+}
+.alavancas-card .badge {
+  margin-left: 6px;
+}
+</style>
+
+
+<style>
+/* Ajuste estético: alinhar altura do card de Alavancas ao DRE */
+.alavancas-card {
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+</style>
+
+</head>
+<body>
+<header>
+<div class="wrap">
+<div class="topbar">
+<div class="brand">
+<div class="dot"></div>
+<div>
+<h1>Painel Gerencial — Diretoria</h1>
+<div class="sub" id="subtitle">Metas • Margem • Custos • Resultado • Ações</div>
+</div>
+</div>
+<div class="controls">
+<select aria-label="Mês" id="periodSelect">
+<option value="jan25">Jan/2025</option>
+<option value="fev25">Fev/2025</option>
+<option value="mar25">Mar/2025</option>
+<option value="abr25">Abr/2025</option>
+<option value="mai25">Mai/2025</option>
+<option value="jun25">Jun/2025</option>
+<option value="jul25">Jul/2025</option>
+<option value="ago25">Ago/2025</option>
+<option value="out25">Out/2025</option>
+<option value="nov25">Nov/2025</option>
+<option value="dez25">Dez/2025</option>
+<option value="jan26">Jan/2026</option>
+</select>
+<select aria-label="Visão" id="viewSelect">
+<option value="mensal">Visão mensal</option>
+<option value="anual">Visão anual</option>
+</select>
+<button id="autoBtn" title="Alternar auto-slide">Auto: ON</button>
+<button id="fullscreenBtn" title="Tela cheia">Tela cheia</button>
+</div>
+</div>
+</div>
+</header>
+<main class="wrap">
+<div class="grid kpis" id="kpiGrid"></div>
+<div class="section-title">
+<h2>Visão rápida</h2>
+<div class="hint">Gráficos: Meta vs Realizado (R$)</div>
+</div>
+<div class="grid tables">
+<div class="card span-8">
+<div class="label">Desempenho por família (R$)</div>
+<div style="height:10px"></div>
+<div id="barChartWrap" style="width:100%; height:320px"></div>
+<div class="note">Comparação de meta (barra clara) vs realizado (barra preenchida).</div>
+</div>
+<div class="card span-4">
+<div class="label">Resumo executivo (30s)</div>
+<div style="height:10px"></div>
+<div id="execSummary"></div>
+<div style="height:8px"></div>
+<div class="note">Leitura rápida para diretoria: o que importa agora.</div>
+</div>
+</div>
+<div class="section-title">
+<h2 id="sectionName">Metas e Realizado</h2>
+<div class="hint" id="updatedAt"></div>
+</div>
+<div class="grid tables">
+<div class="card span-7">
+<div class="label">Por família</div>
+<div style="height:10px"></div>
+<table>
+<thead>
+<tr>
+<th>Família</th>
+<th class="right">Meta (R$)</th>
+<th class="right">Realizado (R$)</th>
+<th class="right">% Meta</th>
+<th class="right">Falta (R$)</th>
+<th class="right">Kg</th>
+</tr>
+</thead>
+<tbody id="familyRows"></tbody>
+</table>
+<div style="height:10px"></div>
+<div class="note">Dica TV: use “Tela cheia” e deixe o zoom do navegador em 100%.</div>
+</div>
+<div class="card span-5">
+<div class="label">Resumo de margem</div>
+<div style="height:10px"></div>
+<table>
+<thead>
+<tr>
+<th>Família</th>
+<th class="right">Preço médio</th>
+<th class="right">Lucro Bruto (R$)</th>
+<th class="right">Margem/Kg</th>
+</tr>
+</thead>
+<tbody id="marginRows"></tbody>
+</table>
+<div style="height:12px"></div>
+<div class="label">Meta batida?</div>
+<div class="mini" id="metaBadges"></div>
+</div>
+<div class="span-6 col-stack">
+<div class="card">
+<div class="label">Despesas de operação</div>
+<div style="height:10px"></div>
+<table>
+<thead>
+<tr>
+<th>Conta</th>
+<th class="right">Orçado</th>
+<th class="right">Pago</th>
+<th class="right">% Exec.</th>
+<th class="right">Custo/kg</th>
+</tr>
+</thead>
+<tbody id="opexRows"></tbody>
+</table>
+</div>
+
+<div class="card dre-panel">
+<div class="label"><span id="dreTitle">Projeção do DRE sobre o Resultado Parcial</span></div>
+<div style="height:10px"></div>
+<table class="proj-table">
+<thead>
+<tr>
+<th>Conta</th>
+<th class="right">Realizado</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Receita Bruta</td><td class="right" id="dreRealReceita">—</td></tr>
+<tr><td>(-) Devoluções</td><td class="right" id="dreRealDev">—</td></tr>
+<tr><td>(-) ICMS</td><td class="right" id="dreRealICMS">—</td></tr>
+<tr><td>(-) PIS</td><td class="right" id="dreRealPIS">—</td></tr>
+<tr><td>(-) COFINS</td><td class="right" id="dreRealCOFINS">—</td></tr>
+<tr><td>(-) DIFAL</td><td class="right" id="dreRealDIFAL">—</td></tr>
+<tr><td>(-) ST</td><td class="right" id="dreRealST">—</td></tr>
+<tr><td><b>Receita Líquida</b></td><td class="right" id="dreRealRecLiq">—</td></tr>
+<tr><td>(-) CMV</td><td class="right" id="dreRealCMV">—</td></tr>
+<tr><td><b>Lucro Bruto Operacional</b></td><td class="right" id="dreRealLB">—</td></tr>
+<tr><td>(-) Despesas Operacionais</td><td class="right" id="dreRealOpex">—</td></tr>
+<tr style="background:rgba(255,255,255,.06)"><td><b>Resultado Final do Período</b></td><td class="right" id="dreRealRes">—</td></tr>
+</tbody>
+</table>
+<div style="height:8px"></div>
+<div class="proj-summary">
+<span class="pill">Base: controle gerencial (PDF)</span>
+<span class="pill">Atualização diária automática</span>
+</div>
+</div>
+
+</div>
+<div class="span-6">
+<div class="card">
+<div class="label">Resultado</div>
+<div style="height:10px"></div>
+<div class="two">
+<div>
+<div class="label">Lucro Bruto</div>
+<div class="value" id="grossProfit"></div>
+<div class="mini" id="grossMini"></div>
+<div style="height:10px"></div>
+<div class="label">Custo Total Operação</div>
+<div class="value" id="totalCost"></div>
+<div class="mini" id="costMini"></div>
+</div>
+<div>
+<div class="label">Resultado Operacional</div>
+<div class="value" id="netResult"></div>
+<div class="mini" id="netMini"></div>
+<div style="height:10px"></div>
+<div class="label">% Meta (Total)</div>
+<div class="progress" title="% atingido">
+<div class="bar" id="totalBar"></div>
+</div>
+<div class="mini"><span class="pill" id="totalPctPill"></span><span class="pill" id="totalGapPill"></span></div>
+</div>
+</div>
+<div class="divider"></div>
+</div>
+<div class="card card-projecao">
+<div class="label">Projeção (em aberto até o fim do mês)</div>
+<div style="height:8px"></div>
+<table class="proj-table">
+<thead>
+<tr>
+<th>Grupo</th>
+<th class="right">Pago</th>
+<th class="right">A pagar</th>
+<th class="right">Proj. mês</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Matéria-prima + Mão de obra</td>
+<td class="right" id="cpvPago">—</td>
+<td class="right" id="cpvApagar">—</td>
+<td class="right" id="cpvProj">—</td>
+</tr>
+<tr>
+<td>Despesas operação</td>
+<td class="right" id="opPago">—</td>
+<td class="right" id="opApagar">—</td>
+<td class="right" id="opProj">—</td>
+</tr>
+<tr>
+<td><b>Total</b></td>
+<td class="right" id="totPago">—</td>
+<td class="right" id="totApagar">—</td>
+<td class="right" id="totProj">—</td>
+</tr>
+</tbody>
+</table>
+<div style="height:8px"></div>
+<div class="proj-summary" id="projNotes"></div>
+</div>
+<div class="card" id="alavancasCard" style="margin-top:12px">
+<div class="alav-header">
+<div>
+<div class="alav-title" id="alavTitle">Alavancas de Resultado do Mês</div>
+<div class="alav-sub" id="alavUpdated"></div>
+</div>
+<span class="badge-mini" id="alavBase">Base: painel</span>
+</div>
+<div class="alav-rows">
+<div class="alav-row">
+<div class="alav-left"><span>1) <b>Break-even</b> (resultado zero)</span></div>
+<div class="alav-right">
+<div class="value" id="alavBe" style="font-size:18px">—</div>
+<span class="badge-mini badge-ok" id="alavBePill">—</span>
+</div>
+</div>
+<div class="alav-row">
+<div class="alav-left"><span>2) Corte necessário em <b>OPEX</b> p/ break-even</span></div>
+<div class="alav-right">
+<div class="value" id="alavOpex" style="font-size:18px">—</div>
+<span class="badge-mini badge-ok" id="alavOpexPill">—</span>
+</div>
+</div>
+<div class="alav-row">
+<div class="alav-left"><span>3) Foco de mix (maior <b>margem/kg</b>)</span></div>
+<div class="alav-right">
+<div class="value" id="alavFocus" style="font-size:18px">—</div>
+<span class="badge-mini badge-ok" id="alavFocusPill">—</span>
+<span class="badge-mini badge-bad" id="alavFocusMeta">—</span>
+</div>
+</div>
+</div>
+<div class="alav-note" id="alavNote">—</div>
+</div>
+</div>
+</div>
+<div style="height:14px"></div>
+<div class="note" id="footnote" style="display:none"></div>
+</main>
+<script>
+/** Dados extraídos dos PDFs enviados (Painel de Resultado Parcial) */
+const DATA = {
+  jan25: {
+      label: "jan/25",
+      updatedAt: "Atualizado em 09/01/2026 13:06",
+      mensal: {
+        totals: { meta: 4170000.00, realizado: 2733495.59, pct: 65.6, falta: 1436504.41, kg: 23017  },
+        families: [
+          { name:"Cobre",   meta:3000000.00, realizado:2027105.91, pct:67.6, falta:972894.09, kg:6806  },
+          { name:"Barras",  meta:1000000.00, realizado:583356.63, pct:58.3, falta:416643.37, kg:14720  },
+          { name:"Alumínio",meta:170000.00, realizado:123033.05, pct:72.4, falta:46966.95, kg:1491  }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:95.43, lucroBruto:146377.55,  margemKg:12.93 },
+          { name:"Barras",   precoMedio:30.89, lucroBruto:52722.33, margemKg:5.95 },
+          { name:"Alumínio", precoMedio:32.02, lucroBruto:8435.76, margemKg:5.50 },
+          { name:"Total",    precoMedio:null,  lucroBruto:207535.64, margemKg:9.56 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:300000.00, pago:221573.10, pct:74.0,  custoKg:5.73 },
+          { name:"Impostos",       orcado:35000.00, pago:152577.57, pct:436.0,  custoKg:3.94 },
+          { name:"Juros e Tarifas",orcado:115000.00, pago:42469.35, pct:37.0,  custoKg:1.10 },
+          { name:"Total Operação", orcado:450000.00, pago:416620.02, pct:93.0,  custoKg:10.77 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 528500.00, lucroBrutoReal: 157693.60, margemKgPrev:7.00, margemKgReal:4.08,
+          custoOperPrev: 450000.00, custoOperReal: 416620.02, custoKgPrev:5.96, custoKgReal:10.77,
+          netPrev: 78500.00, netReal: -258926.42, netKgPrev:1.04, netKgReal:-6.69
+        }
+      },
+      anual: {
+        label: "2025 (anual até jan/25)",
+        totals: { meta: 50040000.00, realizado: 2733495.59, pct: 5.46, falta: 47306504.41, kg: 23017 },
+        families: [
+          { name:"Cobre",   meta:36000000.00, realizado:2027105.91,  pct:5.63, falta:33972894.09, kg:6806 },
+          { name:"Barras",  meta:12000000.00, realizado:583356.63, pct:4.86, falta:11416643.37, kg:14720 },
+          { name:"Alumínio",meta:2040000.00, realizado:123033.05, pct:6.03, falta:1916966.95,  kg:1491 }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:297.84, lucroBruto:105852.74,  margemKg:15.55 },
+          { name:"Barras",   precoMedio:39.63, lucroBruto:16567.40, margemKg:1.13 },
+          { name:"Alumínio", precoMedio:82.52, lucroBruto:35273.45, margemKg:23.66 },
+          { name:"Total",    precoMedio:null,  lucroBruto:157693.60, margemKg:6.85 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:3600000.00, pago:221573.10, pct:6.2,  custoKg:9.63 },
+          { name:"Impostos",       orcado:420000.00,  pago:152577.57, pct:36.3,  custoKg:6.63 },
+          { name:"Juros e Tarifas",orcado:1380000.00,pago:42469.35, pct:3.1,  custoKg:1.85 },
+          { name:"Total Operação", orcado:5400000.00,pago:416620.02, pct:7.7,  custoKg:18.10 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 6342000.00, lucroBrutoReal: 157693.60, margemKgPrev:7.00, margemKgReal:6.85,
+          custoOperPrev: 5400000.00, custoOperReal: 416620.02, custoKgPrev:5.96, custoKgReal:18.10,
+          netPrev: 942000.00, netReal: -258926.42, netKgPrev:1.04, netKgReal:-11.25
+        }
+      }
+    },
+  fev25: {
+      label: "fev/25",
+      updatedAt: "Atualizado em 09/01/2026 13:06",
+      mensal: {
+        totals: { meta: 4170000.00, realizado: 3863689.94, pct: 92.7, falta: 306310.06, kg: 9575  },
+        families: [
+          { name:"Cobre",   meta:3000000.00, realizado:2946152.89, pct:98.2, falta:53847.11, kg:711  },
+          { name:"Barras",  meta:1000000.00, realizado:754619.55, pct:75.5, falta:245380.45, kg:8650  },
+          { name:"Alumínio",meta:170000.00, realizado:162917.50, pct:95.8, falta:7082.50, kg:214  }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:75.71, lucroBruto:406210.28,  margemKg:10.44 },
+          { name:"Barras",   precoMedio:28.37, lucroBruto:22992.69, margemKg:0.86 },
+          { name:"Alumínio", precoMedio:33.12, lucroBruto:51206.77, margemKg:10.41 },
+          { name:"Total",    precoMedio:null,  lucroBruto:480409.74, margemKg:6.82 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:300000.00, pago:265140.76, pct:88.0,  custoKg:3.76 },
+          { name:"Impostos",       orcado:35000.00, pago:28774.72, pct:82.0,  custoKg:0.41 },
+          { name:"Juros e Tarifas",orcado:115000.00, pago:90984.73, pct:79.0,  custoKg:1.29 },
+          { name:"Total Operação", orcado:450000.00, pago:384900.21, pct:86.0,  custoKg:5.46 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 528500.00, lucroBrutoReal: 480409.74, margemKgPrev:7.00, margemKgReal:6.82,
+          custoOperPrev: 450000.00, custoOperReal: 384900.21, custoKgPrev:5.96, custoKgReal:5.46,
+          netPrev: 78500.00, netReal: 95509.53, netKgPrev:1.04, netKgReal:1.36
+        }
+      },
+      anual: {
+        label: "2025 (anual até fev/25)",
+        totals: { meta: 50040000.00, realizado: 6597185.53, pct: 13.18, falta: 43442814.47, kg: 32592 },
+        families: [
+          { name:"Cobre",   meta:36000000.00, realizado:4973258.80,  pct:13.81, falta:31026741.20, kg:7517 },
+          { name:"Barras",  meta:12000000.00, realizado:1337976.18, pct:11.15, falta:10662023.82, kg:23370 },
+          { name:"Alumínio",meta:2040000.00, realizado:285950.55, pct:14.02, falta:1754049.45,  kg:1705 }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:661.60, lucroBruto:512063.02,  margemKg:68.12 },
+          { name:"Barras",   precoMedio:57.25, lucroBruto:39560.09, margemKg:1.69 },
+          { name:"Alumínio", precoMedio:167.71, lucroBruto:86480.22, margemKg:50.72 },
+          { name:"Total",    precoMedio:null,  lucroBruto:638103.34, margemKg:19.58 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:3600000.00, pago:486713.86, pct:13.5,  custoKg:14.93 },
+          { name:"Impostos",       orcado:420000.00,  pago:181352.29, pct:43.2,  custoKg:5.56 },
+          { name:"Juros e Tarifas",orcado:1380000.00,pago:133454.08, pct:9.7,  custoKg:4.09 },
+          { name:"Total Operação", orcado:5400000.00,pago:801520.23, pct:14.8,  custoKg:24.59 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 6342000.00, lucroBrutoReal: 638103.34, margemKgPrev:7.00, margemKgReal:19.58,
+          custoOperPrev: 5400000.00, custoOperReal: 801520.23, custoKgPrev:5.96, custoKgReal:24.59,
+          netPrev: 942000.00, netReal: -163416.89, netKgPrev:1.04, netKgReal:-5.01
+        }
+      }
+    },
+  mar25: {
+      label: "mar/25",
+      updatedAt: "Atualizado em 09/01/2026 13:05",
+      mensal: {
+        totals: { meta: 4170000.00, realizado: 4004335.88, pct: 96.0, falta: 165664.12, kg: 4948  },
+        families: [
+          { name:"Cobre",   meta:3000000.00, realizado:2876474.48, pct:95.9, falta:123525.52, kg:1456  },
+          { name:"Barras",  meta:1000000.00, realizado:900435.64, pct:90.0, falta:99564.36, kg:3492  },
+          { name:"Alumínio",meta:170000.00, realizado:227425.76, pct:133.8, falta:0.00, kg:227425 ,note:"Meta batida" }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:84.82, lucroBruto:88704.80,  margemKg:2.62 },
+          { name:"Barras",   precoMedio:28.51, lucroBruto:44043.70, margemKg:1.39 },
+          { name:"Alumínio", precoMedio:33.60, lucroBruto:45171.29, margemKg:6.67 },
+          { name:"Total",    precoMedio:null,  lucroBruto:177919.79, margemKg:2.46 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:300000.00, pago:366305.77, pct:122.0,  custoKg:5.07 },
+          { name:"Impostos",       orcado:35000.00, pago:6781.46, pct:19.0,  custoKg:0.09 },
+          { name:"Juros e Tarifas",orcado:115000.00, pago:109799.80, pct:95.0,  custoKg:1.52 },
+          { name:"Total Operação", orcado:450000.00, pago:482887.03, pct:107.0,  custoKg:6.68 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 528500.00, lucroBrutoReal: 177919.79, margemKgPrev:7.00, margemKgReal:2.46,
+          custoOperPrev: 450000.00, custoOperReal: 482887.03, custoKgPrev:5.96, custoKgReal:6.68,
+          netPrev: 78500.00, netReal: -304967.24, netKgPrev:1.04, netKgReal:-4.22
+        }
+      },
+      anual: {
+        label: "2025 (anual até mar/25)",
+        totals: { meta: 50040000.00, realizado: 10601521.41, pct: 21.19, falta: 39438478.59, kg: 37540 },
+        families: [
+          { name:"Cobre",   meta:36000000.00, realizado:7849733.28,  pct:21.80, falta:28150266.72, kg:8973 },
+          { name:"Barras",  meta:12000000.00, realizado:2238411.82, pct:18.65, falta:9761588.18, kg:26862 },
+          { name:"Alumínio",meta:2040000.00, realizado:513376.31, pct:25.17, falta:1526623.69,  kg:229130 }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:874.82, lucroBruto:600767.82,  margemKg:66.95 },
+          { name:"Barras",   precoMedio:83.33, lucroBruto:83603.79, margemKg:3.11 },
+          { name:"Alumínio", precoMedio:2.24, lucroBruto:131651.51, margemKg:0.57 },
+          { name:"Total",    precoMedio:null,  lucroBruto:816023.13, margemKg:21.74 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:3600000.00, pago:853019.63, pct:23.7,  custoKg:22.72 },
+          { name:"Impostos",       orcado:420000.00,  pago:188133.75, pct:44.8,  custoKg:5.01 },
+          { name:"Juros e Tarifas",orcado:1380000.00,pago:243253.88, pct:17.6,  custoKg:6.48 },
+          { name:"Total Operação", orcado:5400000.00,pago:1284407.26, pct:23.8,  custoKg:34.21 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 6342000.00, lucroBrutoReal: 816023.13, margemKgPrev:7.00, margemKgReal:21.74,
+          custoOperPrev: 5400000.00, custoOperReal: 1284407.26, custoKgPrev:5.96, custoKgReal:34.21,
+          netPrev: 942000.00, netReal: -468384.13, netKgPrev:1.04, netKgReal:-12.48
+        }
+      }
+    },
+  abr25: {
+      label: "abr/25",
+      updatedAt: "Atualizado em 09/01/2026 13:04",
+      mensal: {
+        totals: { meta: 4170000.00, realizado: 3550241.83, pct: 85.1, falta: 619758.17, kg: 17634  },
+        families: [
+          { name:"Cobre",   meta:3000000.00, realizado:2665901.70, pct:88.9, falta:334098.30, kg:6003  },
+          { name:"Barras",  meta:1000000.00, realizado:810061.80, pct:81.0, falta:189938.20, kg:7693  },
+          { name:"Alumínio",meta:170000.00, realizado:74278.33, pct:43.7, falta:95721.67, kg:3939  }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:55.66, lucroBruto:318533.21,  margemKg:6.65 },
+          { name:"Barras",   precoMedio:24.69, lucroBruto:80969.66, margemKg:2.47 },
+          { name:"Alumínio", precoMedio:24.30, lucroBruto:17833.20, margemKg:5.83 },
+          { name:"Total",    precoMedio:null,  lucroBruto:417336.07, margemKg:4.98 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:300000.00, pago:328501.98, pct:110.0,  custoKg:3.92 },
+          { name:"Impostos",       orcado:35000.00, pago:6315.52, pct:18.0,  custoKg:0.08 },
+          { name:"Juros e Tarifas",orcado:115000.00, pago:46625.18, pct:41.0,  custoKg:0.56 },
+          { name:"Total Operação", orcado:450000.00, pago:381442.68, pct:85.0,  custoKg:4.55 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 528500.00, lucroBrutoReal: 417336.07, margemKgPrev:7.00, margemKgReal:4.98,
+          custoOperPrev: 450000.00, custoOperReal: 381442.68, custoKgPrev:5.96, custoKgReal:4.55,
+          netPrev: 78500.00, netReal: 35893.39, netKgPrev:1.04, netKgReal:0.43
+        }
+      },
+      anual: {
+        label: "2025 (anual até abr/25)",
+        totals: { meta: 50040000.00, realizado: 14151763.24, pct: 28.28, falta: 35888236.76, kg: 55174 },
+        families: [
+          { name:"Cobre",   meta:36000000.00, realizado:10515634.98,  pct:29.21, falta:25484365.02, kg:14976 },
+          { name:"Barras",  meta:12000000.00, realizado:3048473.62, pct:25.40, falta:8951526.38, kg:34555 },
+          { name:"Alumínio",meta:2040000.00, realizado:587654.64, pct:28.81, falta:1452345.36,  kg:233069 }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:702.17, lucroBruto:919301.03,  margemKg:61.38 },
+          { name:"Barras",   precoMedio:88.22, lucroBruto:164573.45, margemKg:4.76 },
+          { name:"Alumínio", precoMedio:2.52, lucroBruto:149484.71, margemKg:0.64 },
+          { name:"Total",    precoMedio:null,  lucroBruto:1233359.20, margemKg:22.35 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:3600000.00, pago:1181521.61, pct:32.8,  custoKg:21.41 },
+          { name:"Impostos",       orcado:420000.00,  pago:194449.27, pct:46.3,  custoKg:3.52 },
+          { name:"Juros e Tarifas",orcado:1380000.00,pago:289879.06, pct:21.0,  custoKg:5.25 },
+          { name:"Total Operação", orcado:5400000.00,pago:1665849.94, pct:30.8,  custoKg:30.19 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 6342000.00, lucroBrutoReal: 1233359.20, margemKgPrev:7.00, margemKgReal:22.35,
+          custoOperPrev: 5400000.00, custoOperReal: 1665849.94, custoKgPrev:5.96, custoKgReal:30.19,
+          netPrev: 942000.00, netReal: -432490.74, netKgPrev:1.04, netKgReal:-7.84
+        }
+      }
+    },
+  mai25: {
+      label: "mai/25",
+      updatedAt: "Atualizado em 09/01/2026 13:04",
+      mensal: {
+        totals: { meta: 4170000.00, realizado: 4941305.46, pct: 118.5, falta: 0.00, kg: 35 ,note:"Meta batida" },
+        families: [
+          { name:"Cobre",   meta:3000000.00, realizado:3648016.22, pct:121.6, falta:0.00, kg:3648016 ,note:"Meta batida" },
+          { name:"Barras",  meta:1000000.00, realizado:999014.99, pct:99.9, falta:985.01, kg:35  },
+          { name:"Alumínio",meta:170000.00, realizado:294274.25, pct:173.1, falta:0.00, kg:294274 ,note:"Meta batida" }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:73.39, lucroBruto:214175.81,  margemKg:4.31 },
+          { name:"Barras",   precoMedio:28.17, lucroBruto:15585.09, margemKg:0.44 },
+          { name:"Alumínio", precoMedio:32.23, lucroBruto:41066.68, margemKg:4.50 },
+          { name:"Total",    precoMedio:null,  lucroBruto:270827.58, margemKg:2.87 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:300000.00, pago:297921.07, pct:99.0,  custoKg:3.16 },
+          { name:"Impostos",       orcado:35000.00, pago:7333.63, pct:21.0,  custoKg:0.08 },
+          { name:"Juros e Tarifas",orcado:115000.00, pago:188180.48, pct:164.0,  custoKg:2.00 },
+          { name:"Total Operação", orcado:450000.00, pago:493435.18, pct:110.0,  custoKg:5.23 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 528500.00, lucroBrutoReal: 270827.58, margemKgPrev:7.00, margemKgReal:2.87,
+          custoOperPrev: 450000.00, custoOperReal: 493435.18, custoKgPrev:5.96, custoKgReal:5.23,
+          netPrev: 78500.00, netReal: -222607.60, netKgPrev:1.04, netKgReal:-2.36
+        }
+      },
+      anual: {
+        label: "2025 (anual até mai/25)",
+        totals: { meta: 50040000.00, realizado: 19093068.70, pct: 38.16, falta: 30946931.30, kg: 55209 },
+        families: [
+          { name:"Cobre",   meta:36000000.00, realizado:14163651.20,  pct:39.34, falta:21836348.80, kg:3662992 },
+          { name:"Barras",  meta:12000000.00, realizado:4047488.61, pct:33.73, falta:7952511.39, kg:34590 },
+          { name:"Alumínio",meta:2040000.00, realizado:881928.89, pct:43.23, falta:1158071.11,  kg:527343 }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:3.87, lucroBruto:1133476.84,  margemKg:0.31 },
+          { name:"Barras",   precoMedio:117.01, lucroBruto:180158.54, margemKg:5.21 },
+          { name:"Alumínio", precoMedio:1.67, lucroBruto:190551.39, margemKg:0.36 },
+          { name:"Total",    precoMedio:null,  lucroBruto:1504186.78, margemKg:27.25 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:3600000.00, pago:1479442.68, pct:41.1,  custoKg:26.80 },
+          { name:"Impostos",       orcado:420000.00,  pago:201782.90, pct:48.0,  custoKg:3.65 },
+          { name:"Juros e Tarifas",orcado:1380000.00,pago:478059.54, pct:34.6,  custoKg:8.66 },
+          { name:"Total Operação", orcado:5400000.00,pago:2159285.12, pct:40.0,  custoKg:39.11 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 6342000.00, lucroBrutoReal: 1504186.78, margemKgPrev:7.00, margemKgReal:27.25,
+          custoOperPrev: 5400000.00, custoOperReal: 2159285.12, custoKgPrev:5.96, custoKgReal:39.11,
+          netPrev: 942000.00, netReal: -655098.34, netKgPrev:1.04, netKgReal:-11.87
+        }
+      }
+    },
+  jun25: {
+      label: "jun/25",
+      updatedAt: "Atualizado em 09/01/2026 13:03",
+      mensal: {
+        totals: { meta: 4170000.00, realizado: 5336435.85, pct: 128.0, falta: 0.00, kg: 7187 ,note:"Meta batida" },
+        families: [
+          { name:"Cobre",   meta:3000000.00, realizado:4372149.02, pct:145.7, falta:0.00, kg:4372149 ,note:"Meta batida" },
+          { name:"Barras",  meta:1000000.00, realizado:795191.37, pct:79.5, falta:204808.63, kg:7160  },
+          { name:"Alumínio",meta:170000.00, realizado:169095.46, pct:99.5, falta:904.54, kg:28  }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:72.02, lucroBruto:237375.80,  margemKg:3.91 },
+          { name:"Barras",   precoMedio:28.61, lucroBruto:14469.21, margemKg:0.52 },
+          { name:"Alumínio", precoMedio:32.70, lucroBruto:27180.43, margemKg:5.26 },
+          { name:"Total",    precoMedio:null,  lucroBruto:279025.44, margemKg:2.98 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:300000.00, pago:305898.62, pct:102.0,  custoKg:3.27 },
+          { name:"Impostos",       orcado:35000.00, pago:28524.33, pct:81.0,  custoKg:0.30 },
+          { name:"Juros e Tarifas",orcado:115000.00, pago:192199.83, pct:167.0,  custoKg:2.05 },
+          { name:"Total Operação", orcado:450000.00, pago:526622.78, pct:117.0,  custoKg:5.62 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 528500.00, lucroBrutoReal: 279025.44, margemKgPrev:7.00, margemKgReal:2.98,
+          custoOperPrev: 450000.00, custoOperReal: 526622.78, custoKgPrev:5.96, custoKgReal:5.62,
+          netPrev: 78500.00, netReal: -247597.34, netKgPrev:1.04, netKgReal:-2.64
+        }
+      },
+      anual: {
+        label: "2025 (anual até jun/25)",
+        totals: { meta: 50040000.00, realizado: 24429504.55, pct: 48.82, falta: 25610495.45, kg: 62396 },
+        families: [
+          { name:"Cobre",   meta:36000000.00, realizado:18535800.22,  pct:51.49, falta:17464199.78, kg:8035141 },
+          { name:"Barras",  meta:12000000.00, realizado:4842679.98, pct:40.36, falta:7157320.02, kg:41750 },
+          { name:"Alumínio",meta:2040000.00, realizado:1051024.35, pct:51.52, falta:988975.65,  kg:527371 }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:2.31, lucroBruto:1370852.64,  margemKg:0.17 },
+          { name:"Barras",   precoMedio:115.99, lucroBruto:194627.75, margemKg:4.66 },
+          { name:"Alumínio", precoMedio:1.99, lucroBruto:217731.82, margemKg:0.41 },
+          { name:"Total",    precoMedio:null,  lucroBruto:1783212.22, margemKg:28.58 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:3600000.00, pago:1785341.30, pct:49.6,  custoKg:28.61 },
+          { name:"Impostos",       orcado:420000.00,  pago:230307.23, pct:54.8,  custoKg:3.69 },
+          { name:"Juros e Tarifas",orcado:1380000.00,pago:670259.37, pct:48.6,  custoKg:10.74 },
+          { name:"Total Operação", orcado:5400000.00,pago:2685907.90, pct:49.7,  custoKg:43.05 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 6342000.00, lucroBrutoReal: 1783212.22, margemKgPrev:7.00, margemKgReal:28.58,
+          custoOperPrev: 5400000.00, custoOperReal: 2685907.90, custoKgPrev:5.96, custoKgReal:43.05,
+          netPrev: 942000.00, netReal: -902695.68, netKgPrev:1.04, netKgReal:-14.47
+        }
+      }
+    },
+  jul25: {
+      label: "jul/25",
+      updatedAt: "Atualizado em 09/01/2026 13:02",
+      mensal: {
+        totals: { meta: 4170000.00, realizado: 3975034.44, pct: 95.3, falta: 194965.56, kg: 5009  },
+        families: [
+          { name:"Cobre",   meta:3000000.00, realizado:2626065.89, pct:87.5, falta:373934.11, kg:5009  },
+          { name:"Barras",  meta:1000000.00, realizado:1121976.05, pct:112.2, falta:0.00, kg:1121976 ,note:"Meta batida" },
+          { name:"Alumínio",meta:170000.00, realizado:226992.50, pct:133.5, falta:0.00, kg:226992 ,note:"Meta batida" }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:74.66, lucroBruto:168697.84,  margemKg:4.80 },
+          { name:"Barras",   precoMedio:28.91, lucroBruto:57203.02, margemKg:1.47 },
+          { name:"Alumínio", precoMedio:29.11, lucroBruto:23898.49, margemKg:3.07 },
+          { name:"Total",    precoMedio:null,  lucroBruto:249799.36, margemKg:3.05 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:300000.00, pago:426352.25, pct:142.0,  custoKg:5.21 },
+          { name:"Impostos",       orcado:35000.00, pago:33356.78, pct:95.0,  custoKg:0.41 },
+          { name:"Juros e Tarifas",orcado:115000.00, pago:154504.18, pct:134.0,  custoKg:1.89 },
+          { name:"Total Operação", orcado:450000.00, pago:614213.21, pct:136.0,  custoKg:7.51 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 528500.00, lucroBrutoReal: 249799.36, margemKgPrev:7.00, margemKgReal:3.05,
+          custoOperPrev: 450000.00, custoOperReal: 614213.21, custoKgPrev:5.96, custoKgReal:7.51,
+          netPrev: 78500.00, netReal: -364413.85, netKgPrev:1.04, netKgReal:-4.46
+        }
+      },
+      anual: {
+        label: "2025 (anual até jul/25)",
+        totals: { meta: 50040000.00, realizado: 28404538.99, pct: 56.76, falta: 21635461.01, kg: 67405 },
+        families: [
+          { name:"Cobre",   meta:36000000.00, realizado:21161866.11,  pct:58.78, falta:14838133.89, kg:8040150 },
+          { name:"Barras",  meta:12000000.00, realizado:5964656.03, pct:49.71, falta:6035343.97, kg:1163726 },
+          { name:"Alumínio",meta:2040000.00, realizado:1278016.85, pct:62.65, falta:761983.15,  kg:754363 }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:2.63, lucroBruto:1539550.48,  margemKg:0.19 },
+          { name:"Barras",   precoMedio:5.13, lucroBruto:251830.77, margemKg:0.22 },
+          { name:"Alumínio", precoMedio:1.69, lucroBruto:241630.31, margemKg:0.32 },
+          { name:"Total",    precoMedio:null,  lucroBruto:2033011.58, margemKg:30.16 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:3600000.00, pago:2211693.55, pct:61.4,  custoKg:32.81 },
+          { name:"Impostos",       orcado:420000.00,  pago:263664.01, pct:62.8,  custoKg:3.91 },
+          { name:"Juros e Tarifas",orcado:1380000.00,pago:824763.55, pct:59.8,  custoKg:12.24 },
+          { name:"Total Operação", orcado:5400000.00,pago:3300121.11, pct:61.1,  custoKg:48.96 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 6342000.00, lucroBrutoReal: 2033011.58, margemKgPrev:7.00, margemKgReal:30.16,
+          custoOperPrev: 5400000.00, custoOperReal: 3300121.11, custoKgPrev:5.96, custoKgReal:48.96,
+          netPrev: 942000.00, netReal: -1267109.53, netKgPrev:1.04, netKgReal:-18.80
+        }
+      }
+    },
+  ago25: {
+      label: "ago/25",
+      updatedAt: "Atualizado em 09/01/2026 13:01",
+      mensal: {
+        totals: { meta: 4170000.00, realizado: 5120122.72, pct: 122.8, falta: 0.00, kg: 4225 ,note:"Meta batida" },
+        families: [
+          { name:"Cobre",   meta:3000000.00, realizado:3930350.85, pct:131.0, falta:0.00, kg:3930350 ,note:"Meta batida" },
+          { name:"Barras",  meta:1000000.00, realizado:882913.11, pct:88.3, falta:117086.89, kg:4225  },
+          { name:"Alumínio",meta:170000.00, realizado:306858.76, pct:180.5, falta:0.00, kg:306858 ,note:"Meta batida" }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:71.85, lucroBruto:379744.43,  margemKg:6.94 },
+          { name:"Barras",   precoMedio:27.71, lucroBruto:60758.55, margemKg:1.91 },
+          { name:"Alumínio", precoMedio:26.46, lucroBruto:101875.60, margemKg:8.78 },
+          { name:"Total",    precoMedio:null,  lucroBruto:542378.58, margemKg:5.53 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:300000.00, pago:355155.67, pct:118.0,  custoKg:3.62 },
+          { name:"Impostos",       orcado:35000.00, pago:35930.07, pct:103.0,  custoKg:0.37 },
+          { name:"Juros e Tarifas",orcado:115000.00, pago:218844.12, pct:190.0,  custoKg:2.23 },
+          { name:"Total Operação", orcado:450000.00, pago:609929.86, pct:136.0,  custoKg:6.21 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 528500.00, lucroBrutoReal: 542378.58, margemKgPrev:7.00, margemKgReal:5.53,
+          custoOperPrev: 450000.00, custoOperReal: 609929.86, custoKgPrev:5.96, custoKgReal:6.21,
+          netPrev: 78500.00, netReal: -67551.28, netKgPrev:1.04, netKgReal:-0.69
+        }
+      },
+      anual: {
+        label: "2025 (anual até ago/25)",
+        totals: { meta: 50040000.00, realizado: 33524661.71, pct: 67.00, falta: 16515338.29, kg: 71630 },
+        families: [
+          { name:"Cobre",   meta:36000000.00, realizado:25092216.96,  pct:69.70, falta:10907783.04, kg:11970500 },
+          { name:"Barras",  meta:12000000.00, realizado:6847569.14, pct:57.06, falta:5152430.86, kg:1167951 },
+          { name:"Alumínio",meta:2040000.00, realizado:1584875.61, pct:77.69, falta:455124.39,  kg:1061221 }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:2.10, lucroBruto:1919294.91,  margemKg:0.16 },
+          { name:"Barras",   precoMedio:5.86, lucroBruto:312589.32, margemKg:0.27 },
+          { name:"Alumínio", precoMedio:1.49, lucroBruto:343505.91, margemKg:0.32 },
+          { name:"Total",    precoMedio:null,  lucroBruto:2575390.16, margemKg:35.95 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:3600000.00, pago:2566849.22, pct:71.3,  custoKg:35.83 },
+          { name:"Impostos",       orcado:420000.00,  pago:299594.08, pct:71.3,  custoKg:4.18 },
+          { name:"Juros e Tarifas",orcado:1380000.00,pago:1043607.67, pct:75.6,  custoKg:14.57 },
+          { name:"Total Operação", orcado:5400000.00,pago:3910050.97, pct:72.4,  custoKg:54.59 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 6342000.00, lucroBrutoReal: 2575390.16, margemKgPrev:7.00, margemKgReal:35.95,
+          custoOperPrev: 5400000.00, custoOperReal: 3910050.97, custoKgPrev:5.96, custoKgReal:54.59,
+          netPrev: 942000.00, netReal: -1334660.81, netKgPrev:1.04, netKgReal:-18.63
+        }
+      }
+    },
+    set25: {
+      label: "set/25",
+      updatedAt: "Atualizado em 09/01/2026 13:00",
+      mensal: {
+        totals: { meta: 4170000.00, realizado: 3427793.80, pct: 82.2, falta: 742206.20, kg: 12567 },
+        families: [
+          { name:"Cobre",   meta:3000000.00, realizado:2210846.48, pct:73.7, falta:789153.52, kg:10309 },
+          { name:"Barras",  meta:1000000.00, realizado:1124057.10, pct:112.4, falta:0.00, kg:null },
+          { name:"Alumínio",meta:170000.00, realizado:92890.22, pct:54.6, falta:77109.78, kg:2258 }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:76.55, lucroBruto:202970.36,  margemKg:7.03 },
+          { name:"Barras",   precoMedio:29.29, lucroBruto:171971.61, margemKg:4.48 },
+          { name:"Alumínio", precoMedio:34.14, lucroBruto:17093.99, margemKg:6.28 },
+          { name:"Total",    precoMedio:null,  lucroBruto:392035.95, margemKg:5.60 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:300000.00, pago:324450.02, pct:108,  custoKg:4.64 },
+          { name:"Impostos",       orcado:35000.00, pago:42821.97, pct:122,  custoKg:0.61 },
+          { name:"Juros e Tarifas",orcado:115000.00, pago:160904.16, pct:140,  custoKg:2.30 },
+          { name:"Total Operação", orcado:450000.00, pago:528176.15, pct:117,  custoKg:7.55 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 528500.00, lucroBrutoReal: 392035.95, margemKgPrev:7.00, margemKgReal:5.60,
+          custoOperPrev: 450000.00, custoOperReal: 528176.15, custoKgPrev:5.96, custoKgReal:7.55,
+          netPrev: 78500.00, netReal: -136140.20, netKgPrev:1.04, netKgReal:-1.95
+        }
+      },
+      anual: {
+        label: "2025 (anual até set/25)",
+        totals: { meta: 50040000.00, realizado: 36952455.51, pct: 73.85, falta: 13087544.49, kg: 84197 },
+        families: [
+          { name:"Cobre",   meta:36000000.00, realizado:27303063.44, pct:75.84, falta:8696936.56, kg:null },
+          { name:"Barras",  meta:12000000.00, realizado:7971626.24, pct:66.43, falta:4028373.76, kg:null },
+          { name:"Alumínio",meta:2040000.00, realizado:1677765.83, pct:82.24, falta:362234.17, kg:null }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:null, lucroBruto:2122265.27,  margemKg:null },
+          { name:"Barras",   precoMedio:null, lucroBruto:484560.93, margemKg:null },
+          { name:"Alumínio", precoMedio:null, lucroBruto:360599.90, margemKg:null },
+          { name:"Total",    precoMedio:null,  lucroBruto:2967426.11, margemKg:35.24 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:3600000.00, pago:2891299.24, pct:80.3,  custoKg:34.34 },
+          { name:"Impostos",       orcado:420000.00, pago:342416.05, pct:81.5,  custoKg:4.07 },
+          { name:"Juros e Tarifas",orcado:1380000.00, pago:1204511.83, pct:87.3,  custoKg:14.31 },
+          { name:"Total Operação", orcado:5400000.00, pago:4438227.12, pct:82.2,  custoKg:52.71 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 6342000.00, lucroBrutoReal: 2967426.11, margemKgPrev:7.00, margemKgReal:35.24,
+          custoOperPrev: 5400000.00, custoOperReal: 4438227.12, custoKgPrev:5.96, custoKgReal:52.71,
+          netPrev: 942000.00, netReal: -1470801.01, netKgPrev:1.04, netKgReal:-17.47
+        }
+      }
+    },
+  out25: {
+      label: "out/25",
+      updatedAt: "Atualizado em 09/01/2026 12:59",
+      mensal: {
+        totals: { meta: 4170000.00, realizado: 3757704.73, pct: 90.1, falta: 412295.27, kg: 7516  },
+        families: [
+          { name:"Cobre",   meta:3000000.00, realizado:2718419.47, pct:90.6, falta:281580.53, kg:3569  },
+          { name:"Barras",  meta:1000000.00, realizado:973262.71, pct:97.3, falta:26737.29, kg:889  },
+          { name:"Alumínio",meta:170000.00, realizado:66022.55, pct:38.8, falta:103977.45, kg:3058  }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:78.89, lucroBruto:279956.81,  margemKg:8.12 },
+          { name:"Barras",   precoMedio:30.07, lucroBruto:179497.63, margemKg:5.55 },
+          { name:"Alumínio", precoMedio:34.01, lucroBruto:10284.10, margemKg:5.30 },
+          { name:"Total",    precoMedio:null,  lucroBruto:469738.55, margemKg:6.83 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:300000.00, pago:400149.47, pct:133.0,  custoKg:5.82 },
+          { name:"Impostos",       orcado:35000.00, pago:34344.33, pct:98.0,  custoKg:0.50 },
+          { name:"Juros e Tarifas",orcado:115000.00, pago:105495.94, pct:92.0,  custoKg:1.53 },
+          { name:"Total Operação", orcado:450000.00, pago:539989.74, pct:120.0,  custoKg:7.85 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 528500.00, lucroBrutoReal: 469738.55, margemKgPrev:7.00, margemKgReal:6.83,
+          custoOperPrev: 450000.00, custoOperReal: 539989.74, custoKgPrev:5.96, custoKgReal:7.85,
+          netPrev: 78500.00, netReal: -70251.19, netKgPrev:1.04, netKgReal:-1.02
+        }
+      },
+      anual: {
+        label: "2025 (anual até out/25)",
+        totals: { meta: 50040000.00, realizado: 37282366.44, pct: 74.51, falta: 12757633.56, kg: 79146 },
+        families: [
+          { name:"Cobre",   meta:36000000.00, realizado:27810636.43,  pct:77.25, falta:8189363.57, kg:11974069 },
+          { name:"Barras",  meta:12000000.00, realizado:7820831.85, pct:65.17, falta:4179168.15, kg:1168840 },
+          { name:"Alumínio",meta:2040000.00, realizado:1650898.16, pct:80.93, falta:389101.84,  kg:1064279 }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:2.32, lucroBruto:2199251.72,  margemKg:0.18 },
+          { name:"Barras",   precoMedio:6.69, lucroBruto:492086.95, margemKg:0.42 },
+          { name:"Alumínio", precoMedio:1.55, lucroBruto:353790.01, margemKg:0.33 },
+          { name:"Total",    precoMedio:null,  lucroBruto:3045128.71, margemKg:38.47 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:3600000.00, pago:2966998.69, pct:82.4,  custoKg:37.49 },
+          { name:"Impostos",       orcado:420000.00,  pago:333938.41, pct:79.5,  custoKg:4.22 },
+          { name:"Juros e Tarifas",orcado:1380000.00,pago:1149103.61, pct:83.3,  custoKg:14.52 },
+          { name:"Total Operação", orcado:5400000.00,pago:4450040.71, pct:82.4,  custoKg:56.23 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 6342000.00, lucroBrutoReal: 3045128.71, margemKgPrev:7.00, margemKgReal:38.47,
+          custoOperPrev: 5400000.00, custoOperReal: 4450040.71, custoKgPrev:5.96, custoKgReal:56.23,
+          netPrev: 942000.00, netReal: -1404912.00, netKgPrev:1.04, netKgReal:-17.75
+        }
+      }
+    },
+  nov25: {
+      label: "nov/25",
+      updatedAt: "Atualizado em 15/01/2026",
+      mensal: {
+        totals: { meta: 4170000.00, realizado: 2916656.73, pct: 69.9, falta: 1253343.27, kg: 18412  },
+        families: [
+          { name:"Cobre",   meta:3000000.00, realizado:1665824.10, pct:55.5, falta:1334175.90, kg:16118  },
+          { name:"Barras",  meta:1000000.00, realizado:932310.95, pct:93.2, falta:67689.05, kg:2294  },
+          { name:"Alumínio",meta:170000.00, realizado:318521.68, pct:187.4, falta:0.00, kg:0 ,note:"Meta batida" }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:82.78, lucroBruto:211605.19,  margemKg:10.51 },
+          { name:"Barras",   precoMedio:29.51, lucroBruto:154787.84, margemKg:4.90 },
+          { name:"Alumínio", precoMedio:32.02, lucroBruto:56625.66,  margemKg:5.69 },
+          { name:"Total",    precoMedio:null,  lucroBruto:423018.68, margemKg:6.86 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:300000.00, pago:284138.29, pct:95.0,  custoKg:4.61 },
+          { name:"Impostos",       orcado:35000.00, pago:16253.36, pct:46.0,  custoKg:0.26 },
+          { name:"Juros e Tarifas",orcado:115000.00, pago:56393.34, pct:49.0,  custoKg:0.91 },
+          { name:"Total Operação", orcado:450000.00, pago:356784.99, pct:79.0,  custoKg:5.79 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 528500.00, lucroBrutoReal: 423018.68, margemKgPrev:7.00, margemKgReal:6.86,
+          custoOperPrev: 450000.00, custoOperReal: 356784.99, custoKgPrev:5.96, custoKgReal:5.79,
+          netPrev: 78500.00, netReal: 66233.69, netKgPrev:1.04, netKgReal:1.07
+        }
+        ,drePdf: {
+        real: {
+          receitaBruta: 2920087.83,
+          devolucoes: 21023.00,
+          icms: 408830.56,
+          pis: 40827.68,
+          cofins: 188055.02,
+          difal: 3008.71,
+          st: 3431.10,
+          receitaLiquida: 2254911.76,
+          cmv: 1855924.79,
+          lucroBrutoOperacional: 398986.97,
+          despesasOperacionais: 356784.99,
+          resultadoFinal: 42201.98,
+        }
+      }
+      },
+      anual: {
+        label: "nov/25",
+        totals: { meta: 50040000.00, realizado: 40199023.17, pct: 80.33, falta: 9840976.83, kg: 97513 },
+        families: [
+          { name:"Cobre",   meta:36000000.00, realizado:29473344.02,  pct:81.87, falta:6526655.98, kg:11990255 },
+          { name:"Barras",  meta:12000000.00, realizado:8756259.31, pct:72.97, falta:3243740.69, kg:1171021 },
+          { name:"Alumínio",meta:2040000.00, realizado:1969419.84, pct:96.54, falta:70580.16,  kg:1382800 }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:2.46, lucroBruto:2400469.64,  margemKg:0.20 },
+          { name:"Barras",   precoMedio:7.48, lucroBruto:649953.65, margemKg:0.56 },
+          { name:"Alumínio", precoMedio:1.42, lucroBruto:411843.40, margemKg:0.30 },
+          { name:"Total",    precoMedio:null,  lucroBruto:3462266.72, margemKg:35.51 }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:3600000.00, pago:3251136.98, pct:90.3,  custoKg:33.34 },
+          { name:"Impostos",       orcado:420000.00,  pago:361372.28, pct:86.0,  custoKg:3.71 },
+          { name:"Juros e Tarifas",orcado:1380000.00,pago:1216757.25, pct:88.2,  custoKg:12.48 },
+          { name:"Total Operação", orcado:5400000.00,pago:4829266.51, pct:89.4,  custoKg:49.52 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 6342000.00, lucroBrutoReal: 3462266.72, margemKgPrev:7.00, margemKgReal:35.51,
+          custoOperPrev: 5400000.00, custoOperReal: 4829266.51, custoKgPrev:5.96, custoKgReal:49.52,
+          netPrev: 942000.00, netReal: -1366999.79, netKgPrev:1.04, netKgReal:-14.02
+      ,drePdf: {
+        real: {
+          receitaBruta: 2920087.83,
+          devolucoes: 21023.00,
+          icms: 408830.56,
+          pis: 40827.68,
+          cofins: 188055.02,
+          difal: 3008.71,
+          st: 3431.10,
+          receitaLiquida: 2254911.76,
+          cmv: 1855924.79,
+          lucroBrutoOperacional: 398986.97,
+          despesasOperacionais: 356784.99,
+          resultadoFinal: 42201.98,
+        }
+      }
+    }
+      }
+    },
+  dez25: {
+      label: "dez/25",
+      updatedAt: "Atualizado em 15/01/2026",
+      mensal: {
+        totals: { meta: 4170000.00, realizado: 2506492.28, pct: 60.1, falta: 1663507.72, kg: 28159 },
+        families: [
+          { name:"Cobre",   meta:3000000.00, realizado:1719349.34, pct:57.3, falta:1280650.66, kg:14857 },
+          { name:"Barras",  meta:1000000.00, realizado: 598580.04, pct:59.9, falta: 401419.96, kg:13301 },
+          { name:"Alumínio",meta: 170000.00, realizado: 188562.90, pct:110.9, falta:0.00, kg: null, note:"Meta batida" }
+        ],      margins: [
+        { name:"Cobre",    precoMedio:86.20, lucroBruto:217692.83, margemKg:10.91 },
+        { name:"Barras",   precoMedio:30.18, lucroBruto:108862.54, margemKg:5.49 },
+        { name:"Alumínio", precoMedio:32.45, lucroBruto:33741.49,  margemKg:5.81 },
+        { name:"Total",    precoMedio:null,  lucroBruto:360296.86, margemKg:7.90 }
+      ],
+despesas: [
+          { name:"Opex",           orcado:300000.00, pago:313632.99, pct:105.0, custoKg:6.88 },
+          { name:"Impostos",       orcado: 35000.00, pago:19973.99, pct:57.0, custoKg:0.44 },
+          { name:"Juros e Tarifas",orcado:115000.00, pago:137228.42, pct:119.0, custoKg:3.01 },
+          { name:"Total Operação", orcado:450000.00, pago:470835.40, pct:105.0, custoKg:10.33 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 528500.00, lucroBrutoReal: 360296.86, margemKgPrev:7.00, margemKgReal:7.90,
+          custoOperPrev: 450000.00, custoOperReal: 470835.40, custoKgPrev:5.96, custoKgReal:10.33,
+          netPrev: 78500.00, netReal: -110538.54, netKgPrev:1.04, netKgReal:-2.42
+        },
+        drePdf: {
+          real: {
+            receitaBruta: 2524695.29,
+            devolucoes: 34346.81,
+            icms: 333136.15,
+            pis: 35284.36,
+            cofins: 162521.96,
+            difal: 739.20,
+            st: 18203.01,
+            receitaLiquida: 1940463.80,
+            cmv: 1608058.49,
+            lucroBrutoOperacional: 332405.31,
+            despesasOperacionais: 470835.40,
+            resultadoFinal: -138430.09,
+          }
+        },
+      },
+
+      anual: {
+        label: "dez/25",
+        totals: { meta: 50040000.00, realizado: 46133309.26, pct: 92.19, falta: 3906690.74, kg: 74443 },
+        families: [
+          { name:"Cobre",   meta:36000000.00, realizado:33403539.84, pct:92.79, falta:2596460.16, kg:34093 },
+          { name:"Barras",  meta:12000000.00, realizado:10478896.45, pct:87.32, falta:1521103.55, kg:53376 },
+          { name:"Alumínio",meta: 2040000.00, realizado: 2250872.97, pct:110.34, falta:0.00, kg:null, note:"Meta batida" }
+        ],
+        margins: [
+          { name:"Cobre",    precoMedio:76.16, lucroBruto:2814813.31, margemKg:6.42 },
+          { name:"Barras",   precoMedio:28.50, lucroBruto: 935809.16, margemKg:2.54 },
+          { name:"Alumínio", precoMedio:30.93, lucroBruto: 458629.59, margemKg:6.30 },
+          { name:"Total",    precoMedio:null,  lucroBruto:4209252.06, margemKg:4.79, extra:"Peso vendido 879.080 (Ton. no PDF)" }
+        ],
+        despesas: [
+          { name:"Opex",           orcado:3600000.00, pago:3889219.99, pct:108.0, custoKg:4.42 },
+          { name:"Impostos",       orcado: 420000.00, pago: 424907.44, pct:101.2, custoKg:0.48 },
+          { name:"Juros e Tarifas",orcado:1380000.00, pago:1514889.83, pct:109.8, custoKg:1.72 },
+          { name:"Total Operação", orcado:5400000.00, pago:5829017.26, pct:107.9, custoKg:6.63 }
+        ],
+        resultado: {
+          lucroBrutoPrev: 6342000.00, lucroBrutoReal: 4209252.06, margemKgPrev:7.00, margemKgReal:4.79,
+          custoOperPrev: 5400000.00, custoOperReal: 5829017.26, custoKgPrev:5.96, custoKgReal:6.63,
+          netPrev: 942000.00, netReal: -1619765.20, netKgPrev:1.04, netKgReal:-1.84
+        },
+        drePdf: {
+          real: {
+            receitaBruta: 2524695.29,
+            devolucoes: 34346.81,
+            icms: 333136.15,
+            pis: 35284.36,
+            cofins: 162521.96,
+            difal: 739.20,
+            st: 18203.01,
+            receitaLiquida: 1940463.80,
+            cmv: 1608058.49,
+            lucroBrutoOperacional: 332405.31,
+            despesasOperacionais: 470835.40,
+            resultadoFinal: -138430.09,
+          }
+        },
+      }
+    },
+  jan26: {
+    label: "jan/26 (parcial)",
+    updatedAt: "Atualizado em 17/01/2026 12:59",
+    mensal: {
+      totals: { meta: 4170000.00, realizado: 1707708.29, pct: 41.0, falta: 2462291.71, kg: 43788 },
+      families: [
+        { name:"Cobre",   meta:3000000.00, realizado:1369666.18, pct:45.7, falta:1630333.82, kg:17006 },
+        { name:"Barras",  meta:1000000.00, realizado:288065.11,  pct:28.8, falta:711934.89,  kg:23044 },
+        { name:"Alumínio",meta:170000.00,  realizado:49977.00,   pct:29.4, falta:120023.00,  kg:3739  }
+      ],
+      margins: [
+        { name:"Cobre",    precoMedio:95.87, lucroBruto:163352.29, margemKg:11.43 },
+        { name:"Barras",   precoMedio:30.89, lucroBruto:55247.16,  margemKg:5.93 },
+        { name:"Alumínio", precoMedio:32.10, lucroBruto:8647.29,   margemKg:5.55 },
+        { name:"Total",    precoMedio:null,  lucroBruto:227246.74, margemKg:9.03 }
+      ],
+      despesas: [
+        { name:"Opex",           orcado:300000.00, pago:148998.00,  pct:50.0, custoKg:5.92, extra:"A pagar 70555.84 (no PDF)" },
+        { name:"Impostos",       orcado:35000.00,  pago:3383.26,    pct:10.0, custoKg:0.13, extra:"A pagar 31085.65 (no PDF)" },
+        { name:"Juros e Tarifas",orcado:115000.00, pago:0.00,       pct:0.0,  custoKg:0.00 },
+        { name:"Total Operação", orcado:450000.00, pago:152381.26,  pct:34.0, custoKg:6.05, extra:"A pagar 101641.49 (no PDF)" }
+      ],
+      cpv: {
+        materiaPrima: { orcado:3300000.00, pago:913336.46, aPagar:1364238.13, custoKg:36.29 },
+        maoDeObra:    { orcado:200000.00,  pago:43234.32,  aPagar:12065.10,   custoKg:1.72  },
+        total:        { orcado:3500000.00, pago:956570.78, aPagar:1376303.23, custoKg:38.01 }
+      },
+      projecao: {
+        grossMarginPct: 0.115254,
+        despesasOper: { pago:152381.26, aPagar:101641.49,  projMes:254022.75 },
+        cpv:         { pago:956570.78, aPagar:1376303.23, projMes:2332874.01 },
+        total:       { pago:1108952.04, aPagar:1477944.72, projMes:2586896.76 },
+        faturamentoBreakEven: 0.00,
+        faturamentoAdicional: 0.00
+      },
+      resultado: {
+        lucroBrutoPrev: 528500.00, lucroBrutoReal: 227246.74, margemKgPrev:7.00,  margemKgReal:9.03,
+        custoOperPrev:  450000.00, custoOperReal:  152381.26, custoKgPrev:5.96,   custoKgReal:6.05,
+        netPrev:         78500.00, netReal:          74865.48, netKgPrev:1.04,     netKgReal:2.97
+      },
+      drePdf: {
+        real: {
+          receitaBruta: 1713180.49,
+          devolucoes: 40000.00,
+          icms: 219423.66,
+          pis: 23753.52,
+          cofins: 109410.40,
+          difal: 0.00,
+          st: 5472.20,
+          receitaLiquida: 1315120.71,
+          cmv: 1117639.97,
+          lucroBrutoOperacional: 197480.74,
+          despesasOperacionais: 152381.26,
+          resultadoFinal: 45099.48
+        }
+      }
+    }
+  }
+};
+
+const EXTRA = {
+  // Base simulando leitura do Excel (Jan/2025) — usado para comparação YoY
+  yoy: {
+    "2025-01": {
+      totalRealizado: 1800000 + 720000 + 110000,
+      porFamilia: [
+        {name:"Cobre", value: 1800000},
+        {name:"Barras", value: 720000},
+        {name:"Alumínio", value: 110000}
+      ]
+    }
+  },
+  // Evolução semanal (Jan/2026) — base de projeção
+  weekly: {
+    "2026-01": [],
+    semanasMes: 4
+  }
+};
+
+function brl(v){
+  if(v === null || v === undefined) return "—";
+  return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v);
+}
+function num(v, digits=0){
+  if(v === null || v === undefined) return "—";
+  return new Intl.NumberFormat('pt-BR',{minimumFractionDigits:digits, maximumFractionDigits:digits}).format(v);
+}
+function pct(v, digits=1){
+  if(v === null || v === undefined) return "—";
+  return num(v,digits) + "%";
+}
+function pillClassForPct(v){
+  if(v === null || v === undefined) return "pill";
+  if(v >= 100) return "pill ok";
+  if(v >= 70) return "pill warn";
+  return "pill bad";
+}
+function signPill(v){
+  if(v === null || v === undefined) return "pill";
+  if(v >= 0) return "pill ok";
+  return "pill bad";
+}
+
+function setBars(totalPct){
+  const bar = document.getElementById('totalBar');
+  const w = Math.max(0, Math.min(100, totalPct || 0));
+  bar.style.width = w + "%";
+  bar.className = "bar" + (w < 40 ? " badbar" : "");
+}
+
+
+function clearEl(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+
+function svgEl(name, attrs={}){
+  const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+  for(const [k,v] of Object.entries(attrs)) el.setAttribute(k, v);
+  return el;
+}
+
+function renderBarChart(container, items){
+  // items: [{name, meta, realizado}]  -> Horizontal (categorias no eixo Y)
+  clearEl(container);
+  const W = container.clientWidth || 800;
+  const H = container.clientHeight || 320;
+
+  const svg = svgEl("svg", {width:"100%", height:"100%", viewBox:`0 0 ${W} ${H}`, preserveAspectRatio:"none"});
+
+  // Mais espaço para os rótulos à esquerda (TV)
+  const pad = {l:140, r:22, t:18, b:36};
+  const innerW = W - pad.l - pad.r;
+  const innerH = H - pad.t - pad.b;
+
+  const fmtShort = (v) => {
+    if(v === null || v === undefined) return "—";
+    const abs = Math.abs(v);
+    if(abs >= 1e9) return (v/1e9).toFixed(1).replace('.',',') + "B";
+    if(abs >= 1e6) return (v/1e6).toFixed(2).replace('.',',') + "M";
+    if(abs >= 1e3) return (v/1e3).toFixed(1).replace('.',',') + "k";
+    return brl(v);
+  };
+
+  const maxVal = Math.max(...items.flatMap(d => [d.meta, d.realizado]), 1);
+  const xScale = v => pad.l + innerW * (v / maxVal);
+
+  // Grid vertical (0, 25, 50, 75, 100%)
+  const grid = svgEl("g");
+  const ticks = [0, .25, .5, .75, 1];
+  ticks.forEach(t => {
+    const x = pad.l + innerW * t;
+    grid.appendChild(svgEl("line", {
+      x1:x, y1:pad.t, x2:x, y2:pad.t+innerH,
+      stroke:"rgba(255,255,255,.08)",
+      "stroke-width":"1"
+    }));
+    const lbl = svgEl("text", {
+      x:x, y:pad.t+innerH+22,
+      fill:"rgba(233,237,247,.55)",
+      "font-size":"11",
+      "text-anchor":"middle"
+    });
+    lbl.textContent = brl(maxVal*t).replace("R$ ","");
+    grid.appendChild(lbl);
+  });
+  svg.appendChild(grid);
+
+  const n = Math.max(items.length, 1);
+  const rowH = innerH / n;
+  const barH = Math.max(10, Math.min(22, rowH * 0.28));
+  const gap = Math.max(6, Math.min(10, rowH * 0.12));
+
+  for(let i=0;i<items.length;i++){
+    const d = items[i];
+    const yc = pad.t + i*rowH + rowH/2;
+
+    // rótulo (categoria) à esquerda
+    const name = svgEl("text", {
+      x: pad.l - 10, y: yc + 4,
+      fill:"rgba(233,237,247,.90)",
+      "font-size":"13",
+      "text-anchor":"end"
+    });
+    name.textContent = d.name;
+    svg.appendChild(name);
+
+    // valores
+    const metaX2 = xScale(d.meta);
+    const realX2 = xScale(d.realizado);
+
+    // meta (outline / light) - barra de referência
+    const metaY = yc - (barH + gap/2);
+    const metaRect = svgEl("rect", {
+      x: pad.l, y: metaY,
+      width: Math.max(2, metaX2 - pad.l),
+      height: barH,
+      rx:"8", ry:"8",
+      fill:"rgba(122,162,255,.14)",
+      stroke:"rgba(122,162,255,.55)",
+      "stroke-width":"1"
+    });
+
+    // realizado (filled gradient) - barra principal
+    const defs = (i===0) ? svgEl("defs") : null;
+    const gradId = "gh"+i;
+    if(defs){
+      // cria todos os gradients de uma vez (evita repetir defs)
+      items.forEach((_,j)=>{
+        const g = svgEl("linearGradient", {id:"gh"+j, x1:"0", y1:"0", x2:"1", y2:"0"});
+        g.appendChild(svgEl("stop", {"offset":"0%", "stop-color":"rgba(53,208,127,.95)"}));
+        g.appendChild(svgEl("stop", {"offset":"100%", "stop-color":"rgba(122,162,255,.85)"}));
+        defs.appendChild(g);
+      });
+      svg.appendChild(defs);
+    }
+
+    const realY = yc + gap/2;
+    const realRect = svgEl("rect", {
+      x: pad.l, y: realY,
+      width: Math.max(2, realX2 - pad.l),
+      height: barH,
+      rx:"8", ry:"8",
+      fill:`url(#${gradId})`,
+      stroke:"rgba(255,255,255,.10)",
+      "stroke-width":"1"
+    });
+
+    svg.appendChild(metaRect);
+    svg.appendChild(realRect);
+
+    // rótulos numéricos (no fim da barra) - mantidos compactos
+    const val1 = svgEl("text", {
+      x: Math.min(W - pad.r, metaX2 + 8),
+      y: metaY + barH - 6,
+      fill:"rgba(233,237,247,.60)",
+      "font-size":"11"
+    });
+    val1.textContent = fmtShort(d.meta);
+    svg.appendChild(val1);
+
+    const val2 = svgEl("text", {
+      x: Math.min(W - pad.r, realX2 + 8),
+      y: realY + barH - 6,
+      fill:"rgba(233,237,247,.85)",
+      "font-size":"11"
+    });
+    val2.textContent = fmtShort(d.realizado);
+    svg.appendChild(val2);
+  }
+
+  // legend (top-left inside plot)
+  const lg = svgEl("g");
+  lg.appendChild(svgEl("rect", {x:pad.l, y:8, width:10, height:10, fill:"rgba(122,162,255,.18)", stroke:"rgba(122,162,255,.55)", "stroke-width":"1"}));
+  const l1 = svgEl("text",{x:pad.l+16, y:17, fill:"rgba(233,237,247,.75)", "font-size":"12"});
+  l1.textContent="Meta";
+  lg.appendChild(l1);
+  lg.appendChild(svgEl("rect", {x:pad.l+70, y:8, width:10, height:10, fill:"rgba(53,208,127,.80)", stroke:"rgba(255,255,255,.10)", "stroke-width":"1"}));
+  const l2 = svgEl("text",{x:pad.l+86, y:17, fill:"rgba(233,237,247,.75)", "font-size":"12"});
+  l2.textContent="Realizado";
+  lg.appendChild(l2);
+  svg.appendChild(lg);
+
+  container.appendChild(svg);
+}
+
+
+function renderSimpleBarChart(container, items, valueLabel){
+  // items: [{name, value}]
+  clearEl(container);
+  const W = container.clientWidth || 520;
+  const H = container.clientHeight || 260;
+  const svg = svgEl("svg", {width:"100%", height:"100%", viewBox:`0 0 ${W} ${H}`, preserveAspectRatio:"none"});
+  const pad = {l:56, r:16, t:18, b:44};
+  const innerW = W - pad.l - pad.r;
+  const innerH = H - pad.t - pad.b;
+
+  const maxVal = Math.max(...items.map(d=>d.value), 1);
+  const yScale = v => pad.t + innerH * (1 - (v / maxVal));
+
+  // grid
+  for(let i=0;i<=4;i++){
+    const frac=i/4;
+    const y=pad.t+innerH*frac;
+    svg.appendChild(svgEl("line",{x1:pad.l,y1:y,x2:pad.l+innerW,y2:y,stroke:"rgba(122,162,255,.16)"}));
+    const val=maxVal*(1-frac);
+    const t=svgEl("text",{x:pad.l-10,y:y+4,fill:"rgba(233,237,247,.75)","font-size":"12","text-anchor":"end"});
+    t.textContent = (val>=1000000) ? (val/1000000).toFixed(1)+"M" : (val>=1000 ? (val/1000).toFixed(0)+"k" : val.toFixed(0));
+    svg.appendChild(t);
+  }
+
+  const n=items.length;
+  const groupW = innerW / n;
+  const barW = Math.min(90, groupW*0.6);
+
+  items.forEach((d,i)=>{
+    const x = pad.l + groupW*i + (groupW-barW)/2;
+    const y = yScale(d.value);
+    const h = pad.t+innerH - y;
+
+    const fill = i===0 ? "rgba(122,162,255,.55)" : "rgba(53,208,127,.88)";
+    svg.appendChild(svgEl("rect",{x,y,width:barW,height:h,rx:"12",ry:"12",fill,stroke:"rgba(255,255,255,.10)"}));
+
+    const xt = svgEl("text",{x:x+barW/2,y:pad.t+innerH+28,fill:"rgba(233,237,247,.85)","font-size":"12","text-anchor":"middle"});
+    xt.textContent = d.name;
+    svg.appendChild(xt);
+
+    const vt = svgEl("text",{x:x+barW/2,y:Math.max(16,y-6),fill:"rgba(233,237,247,.85)","font-size":"11","text-anchor":"middle"});
+    vt.textContent = valueLabel==="pct" ? (d.value.toFixed(1)+"%") : ((d.value>=1000000)?(d.value/1000000).toFixed(2)+"M":(d.value>=1000?(d.value/1000).toFixed(1)+"k":d.value.toFixed(0)));
+    svg.appendChild(vt);
+  });
+
+  container.appendChild(svg);
+}
+
+function renderShareChart(container, items){
+  // items: [{name, value}]
+  clearEl(container);
+  const W = container.clientWidth || 360;
+  const H = container.clientHeight || 220;
+  const svg = svgEl("svg", {width:"100%", height:"100%", viewBox:`0 0 ${W} ${H}`});
+  const cx = W/2, cy = H/2 - 6;
+  const r = Math.min(W, H)*0.36;
+  const total = Math.max(items.reduce((a,b)=>a+b.value,0), 1);
+
+  let angle = -Math.PI/2;
+  const colors = [
+    "rgba(122,162,255,.85)",
+    "rgba(53,208,127,.85)",
+    "rgba(255,204,102,.85)",
+    "rgba(255,107,107,.85)"
+  ];
+  function arcPath(startA, endA){
+    const x1 = cx + r*Math.cos(startA), y1 = cy + r*Math.sin(startA);
+    const x2 = cx + r*Math.cos(endA), y2 = cy + r*Math.sin(endA);
+    const large = (endA-startA) > Math.PI ? 1 : 0;
+    return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+  }
+
+  items.forEach((it, i) => {
+    const frac = it.value/total;
+    const end = angle + frac*Math.PI*2;
+    svg.appendChild(svgEl("path",{d:arcPath(angle,end), fill:colors[i%colors.length], stroke:"rgba(255,255,255,.10)"}));
+    angle = end;
+  });
+
+  // donut hole
+  svg.appendChild(svgEl("circle",{cx, cy, r:r*0.62, fill:"rgba(11,16,32,.85)"}));
+
+  const t1 = svgEl("text",{x:cx, y:cy-2, fill:"rgba(233,237,247,.92)", "font-size":"14", "font-weight":"700", "text-anchor":"middle"});
+  t1.textContent = "Mix de faturamento";
+  svg.appendChild(t1);
+  const t2 = svgEl("text",{x:cx, y:cy+16, fill:"rgba(233,237,247,.70)", "font-size":"12", "text-anchor":"middle"});
+  t2.textContent = "por família";
+  svg.appendChild(t2);
+
+  // legend
+  let y = H - 44;
+  const x1 = 16;
+  items.slice(0,4).forEach((it,i)=>{
+    svg.appendChild(svgEl("rect",{x:x1, y:y+i*16, width:10, height:10, fill:colors[i%colors.length]}));
+    const tx = svgEl("text",{x:x1+14, y:y+9+i*16, fill:"rgba(233,237,247,.75)", "font-size":"12"});
+    tx.textContent = `${it.name}: ${(it.value/total*100).toFixed(1)}%`;
+    svg.appendChild(tx);
+  });
+
+  container.appendChild(svg);
+}
+
+function renderMarginPctChart(container, items){
+  // items: [{name, valuePct}]
+  clearEl(container);
+  const W = container.clientWidth || 420;
+  const H = container.clientHeight || 260;
+  const svg = svgEl("svg", {width:"100%", height:"100%", viewBox:`0 0 ${W} ${H}`, preserveAspectRatio:"none"});
+  const pad = {l:56, r:14, t:16, b:40};
+  const innerW = W - pad.l - pad.r;
+  const innerH = H - pad.t - pad.b;
+
+  const maxVal = Math.max(...items.map(d=>d.valuePct), 1);
+  const yScale = v => pad.t + innerH * (1 - (v / maxVal));
+
+  // grid
+  for(let i=0;i<=4;i++){
+    const frac=i/4;
+    const y=pad.t+innerH*frac;
+    svg.appendChild(svgEl("line",{x1:pad.l,y1:y,x2:pad.l+innerW,y2:y,stroke:"rgba(122,162,255,.16)"}));
+    const val=maxVal*(1-frac);
+    const t=svgEl("text",{x:pad.l-10,y:y+4,fill:"rgba(233,237,247,.75)","font-size":"12","text-anchor":"end"});
+    t.textContent = val.toFixed(0) + "%";
+    svg.appendChild(t);
+  }
+
+  const n=items.length;
+  const groupW = innerW / n;
+  const barW = Math.min(56, groupW*0.55);
+
+  items.forEach((d,i)=>{
+    const x = pad.l + groupW*i + (groupW-barW)/2;
+    const y = yScale(d.valuePct);
+    const h = pad.t+innerH - y;
+
+    const fill = d.valuePct >= 10 ? "rgba(53,208,127,.88)" : (d.valuePct >= 3 ? "rgba(255,204,102,.88)" : "rgba(255,107,107,.88)");
+    svg.appendChild(svgEl("rect",{x,y,width:barW,height:h,rx:"10",ry:"10",fill,stroke:"rgba(255,255,255,.10)"}));
+
+    const xt = svgEl("text",{x:x+barW/2,y:pad.t+innerH+24,fill:"rgba(233,237,247,.85)","font-size":"12","text-anchor":"middle"});
+    xt.textContent = d.name;
+    svg.appendChild(xt);
+
+    const vt = svgEl("text",{x:x+barW/2,y:Math.max(14,y-6),fill:"rgba(233,237,247,.85)","font-size":"11","text-anchor":"middle"});
+    vt.textContent = d.valuePct.toFixed(1) + "%";
+    svg.appendChild(vt);
+  });
+
+  container.appendChild(svg);
+}
+
+function renderLineChart(container, points){
+  // points: [{label, value}]
+  clearEl(container);
+  const W = container.clientWidth || 760;
+  const H = container.clientHeight || 260;
+  const svg = svgEl("svg", {width:"100%", height:"100%", viewBox:`0 0 ${W} ${H}`, preserveAspectRatio:"none"});
+  const pad = {l:70, r:18, t:18, b:44};
+  const innerW = W - pad.l - pad.r;
+  const innerH = H - pad.t - pad.b;
+
+  const maxVal = Math.max(...points.map(p=>p.value), 1);
+  const minVal = Math.min(...points.map(p=>p.value), 0);
+  const span = Math.max(maxVal - minVal, 1);
+
+  const xScale = (i) => pad.l + (points.length===1 ? innerW/2 : (innerW*(i/(points.length-1))));
+  const yScale = (v) => pad.t + innerH * (1 - ((v - minVal)/span));
+
+  // grid
+  for(let i=0;i<=4;i++){
+    const frac=i/4;
+    const y=pad.t+innerH*frac;
+    svg.appendChild(svgEl("line",{x1:pad.l,y1:y,x2:pad.l+innerW,y2:y,stroke:"rgba(122,162,255,.16)"}));
+    const val = maxVal - span*frac;
+    const t=svgEl("text",{x:pad.l-10,y:y+4,fill:"rgba(233,237,247,.75)","font-size":"12","text-anchor":"end"});
+    t.textContent = (val>=1000000) ? (val/1000000).toFixed(1)+"M" : (val>=1000 ? (val/1000).toFixed(0)+"k" : val.toFixed(0));
+    svg.appendChild(t);
+  }
+
+  // line path
+  let dpath = "";
+  points.forEach((p,i)=>{
+    const x=xScale(i), y=yScale(p.value);
+    dpath += (i===0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+  });
+
+  // glow
+  svg.appendChild(svgEl("path",{d:dpath, fill:"none", stroke:"rgba(122,162,255,.25)","stroke-width":"8","stroke-linecap":"round"}));
+  svg.appendChild(svgEl("path",{d:dpath, fill:"none", stroke:"rgba(122,162,255,.95)","stroke-width":"3","stroke-linecap":"round"}));
+
+  // points + labels
+  points.forEach((p,i)=>{
+    const x=xScale(i), y=yScale(p.value);
+    svg.appendChild(svgEl("circle",{cx:x, cy:y, r:"5", fill:"rgba(53,208,127,.90)", stroke:"rgba(255,255,255,.15)"}));
+
+    const xt = svgEl("text",{x:x, y:pad.t+innerH+28, fill:"rgba(233,237,247,.85)","font-size":"12","text-anchor":"middle"});
+    xt.textContent = p.label;
+    svg.appendChild(xt);
+  });
+
+  // caption
+  const cap = svgEl("text",{x:pad.l, y:14, fill:"rgba(233,237,247,.75)","font-size":"12"});
+  cap.textContent = "Realizado (R$)";
+  svg.appendChild(cap);
+
+  container.appendChild(svg);
+}
+
+function renderPieChart(container, meta, realizado){
+  clearEl(container);
+  const W = container.clientWidth || 360;
+  const H = container.clientHeight || 320;
+  const svg = svgEl("svg", {width:"100%", height:"100%", viewBox:`0 0 ${W} ${H}`});
+  const cx = W/2, cy = H/2 - 6;
+  const r = Math.min(W, H)*0.33;
+  const total = Math.max(meta, 1);
+  const done = Math.max(0, Math.min(meta, realizado));
+  const miss = Math.max(0, meta - done);
+
+  function arcPath(startA, endA){
+    const x1 = cx + r*Math.cos(startA), y1 = cy + r*Math.sin(startA);
+    const x2 = cx + r*Math.cos(endA), y2 = cy + r*Math.sin(endA);
+    const large = (endA-startA) > Math.PI ? 1 : 0;
+    return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+  }
+  const start = -Math.PI/2;
+  const doneA = start + (done/total)*Math.PI*2;
+  const missA = start + Math.PI*2;
+
+  // done slice
+  svg.appendChild(svgEl("path",{d:arcPath(start, doneA), fill:"rgba(53,208,127,.90)", stroke:"rgba(255,255,255,.10)"}));
+  // missing slice
+  svg.appendChild(svgEl("path",{d:arcPath(doneA, missA), fill:"rgba(122,162,255,.22)", stroke:"rgba(122,162,255,.35)"}));
+
+  // donut hole
+  svg.appendChild(svgEl("circle",{cx, cy, r:r*0.62, fill:"rgba(11,16,32,.85)"}));
+
+  // center text
+  const pctDone = (done/total)*100;
+  const t1 = svgEl("text",{x:cx, y:cy-6, fill:"rgba(233,237,247,.92)", "font-size":"22", "font-weight":"700", "text-anchor":"middle"});
+  t1.textContent = pctDone.toFixed(1) + "%";
+  svg.appendChild(t1);
+  const t2 = svgEl("text",{x:cx, y:cy+16, fill:"rgba(233,237,247,.70)", "font-size":"12", "text-anchor":"middle"});
+  t2.textContent = "atingido";
+  svg.appendChild(t2);
+
+  // legend
+  const ly = H - 34;
+  svg.appendChild(svgEl("rect",{x:W*0.20, y:ly, width:12, height:12, fill:"rgba(53,208,127,.90)"}));
+  const l1 = svgEl("text",{x:W*0.20+18, y:ly+11, fill:"rgba(233,237,247,.75)", "font-size":"12"});
+  l1.textContent = "Realizado";
+  svg.appendChild(l1);
+
+  svg.appendChild(svgEl("rect",{x:W*0.56, y:ly, width:12, height:12, fill:"rgba(122,162,255,.22)", stroke:"rgba(122,162,255,.35)"}));
+  const l2 = svgEl("text",{x:W*0.56+18, y:ly+11, fill:"rgba(233,237,247,.75)", "font-size":"12"});
+  l2.textContent = "Falta";
+  svg.appendChild(l2);
+
+  // values
+  const v = svgEl("text",{x:cx, y:H-10, fill:"rgba(233,237,247,.65)", "font-size":"12", "text-anchor":"middle"});
+  v.textContent = `Meta: ${brl(meta)} • Realizado: ${brl(realizado)} • Falta: ${brl(miss)}`;
+  svg.appendChild(v);
+
+  container.appendChild(svg);
+}
+
+
+
+// === DRE – Realizado ===
+// Helper global para atualizar células (usado pelo DRE)
+function setTxt(id, value){
+  const el = document.getElementById(id);
+  if(el) el.textContent = value;
+}
+
+function renderDRE(data){
+  if(!data) return;
+  const setCell = (id, val) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = val;
+  };
+
+  // Fonte principal: valores do PDF (controle gerencial)
+  const pdf = data.drePdf?.real;
+  if(!pdf){
+    // Se não houver, não preenche para evitar números incoerentes
+    return;
+  }
+
+  setCell('dreRealReceita', brl(pdf.receitaBruta));
+  setCell('dreRealDev', brl(pdf.devolucoes));
+  setCell('dreRealICMS', brl(pdf.icms));
+  setCell('dreRealPIS', brl(pdf.pis));
+  setCell('dreRealCOFINS', brl(pdf.cofins));
+  setCell('dreRealDIFAL', brl(pdf.difal));
+  setCell('dreRealST', brl(pdf.st));
+  setCell('dreRealRecLiq', brl(pdf.receitaLiquida));
+  setCell('dreRealCMV', brl(pdf.cmv));
+  setCell('dreRealLB', brl(pdf.lucroBrutoOperacional));
+  setCell('dreRealOpex', brl(pdf.despesasOperacionais));
+  setCell('dreRealRes', brl(pdf.resultadoFinal));
+  const resEl = document.getElementById("dreRealRes");
+  if(resEl){
+    resEl.classList.remove("dre-positive","dre-negative");
+    // Use the numeric source-of-truth to avoid parsing issues with formats like "-R$ 123,45".
+    const num = Number(pdf.resultadoFinal);
+    if(!Number.isNaN(num)) resEl.classList.add(num>=0 ? "dre-positive":"dre-negative");
+  }
+}
+
+function renderAlavancas(periodKey, viewKey, period, data){
+  try{
+    const title = document.getElementById('alavTitle');
+    const sub = document.getElementById('alavUpdated');
+    const beVal = document.getElementById('alavBe');
+    const bePill = document.getElementById('alavBePill');
+    const opVal = document.getElementById('alavOpex');
+    const opPill = document.getElementById('alavOpexPill');
+    const focus = document.getElementById('alavFocus');
+    const focusPill = document.getElementById('alavFocusPill');
+    const focusMeta = document.getElementById('alavFocusMeta');
+    const note = document.getElementById('alavNote');
+
+    if(!period || !data) return;
+
+    const isMensal = (viewKey === 'mensal');
+    const label = period.label || periodKey;
+    title.textContent = `Alavancas de Resultado do Mês`;
+    sub.textContent = ``;
+    sub.style.display = 'none';
+
+    // Resultado base (preferir o DRE do PDF, para ficar coerente com o painel)
+    const pdfRes = data.drePdf?.real?.resultadoFinal;
+    const net = (typeof pdfRes === 'number') ? pdfRes : Number(data.resultado?.liquidoReal ?? 0);
+
+    // Margem bruta (% sobre receita líquida) para converter resultado -> faturamento
+    const lb = Number(data.drePdf?.real?.lucroBrutoOperacional ?? data.resultado?.lucroBrutoReal ?? 0);
+    const recLiq = Number(data.drePdf?.real?.receitaLiquida ?? data.totals?.realizado ?? 0);
+    let gmPct = 0;
+    if(recLiq > 0 && lb !== 0) gmPct = lb / recLiq;
+
+    // 1) Break-even (faturamento adicional)
+    if(net >= 0){
+      beVal.textContent = brl(0);
+      bePill.textContent = 'já positivo';
+      bePill.className = 'badge-mini badge-ok';
+    } else {
+      const needProfit = -net;
+      const needRevenue = (gmPct > 0.0001) ? (needProfit / gmPct) : needProfit;
+      beVal.textContent = '+ ' + brl(needRevenue);
+      bePill.textContent = 'para zerar';
+      bePill.className = 'badge-mini badge-warn';
+    }
+
+    // 2) Corte necessário de OPEX
+    if(net >= 0){
+      opVal.textContent = brl(0);
+      opPill.textContent = 'não requer';
+      opPill.className = 'badge-mini badge-ok';
+    } else {
+      opVal.textContent = '- ' + brl(-net);
+      opPill.textContent = 'equivalente';
+      opPill.className = 'badge-mini badge-warn';
+    }
+
+    // 3) Foco de mix (maior margem/kg)
+    // Observação: margem/kg vem do bloco data.margins (não de data.families).
+    // Vamos escolher a maior margem/kg e cruzar com % da meta da família.
+
+    const fam = Array.isArray(data.families) ? data.families.slice() : [];
+    const mar = Array.isArray(data.margins) ? data.margins.slice() : [];
+
+    let best = null;
+    if(mar.length){
+      best = mar
+        .filter(x => x && x.name && x.name.toLowerCase() !== 'total')
+        .sort((a,b) => Number(b.margemKg||0) - Number(a.margemKg||0))[0] || null;
+    }
+
+    if(best){
+      const famMatch = fam.find(x => x && x.name && String(x.name).toLowerCase() === String(best.name).toLowerCase());
+      const pctMeta = famMatch ? Number(famMatch.pct||0) : 0;
+
+      focus.textContent = best.name;
+      focusPill.textContent = `Margem/kg: ${brl(Number(best.margemKg||0))}`;
+      focusPill.className = 'badge-mini badge-ok';
+
+      focusMeta.textContent = `Meta: ${pct(pctMeta,1)}`;
+      focusMeta.className = (pctMeta >= 100) ? 'badge-mini badge-ok' : 'badge-mini badge-bad';
+    } else {
+      focus.textContent = '—';
+      focusPill.textContent = '—';
+      focusPill.className = 'badge-mini';
+      focusMeta.textContent = '—';
+      focusMeta.className = 'badge-mini';
+    }
+
+    // Nota executiva
+    if(net >= 0){
+
+    } else {
+
+    }
+
+  }catch(e){ /* noop */ }
+}
+
+
+function render(){
+  const periodKey = document.getElementById('periodSelect').value;
+  const viewKey = document.getElementById('viewSelect').value; // mensal | anual
+  const period = DATA[periodKey];
+  const data = period[viewKey];
+
+  // Atualiza card Projeção – DRE
+  try{ renderDRE(data);
+  renderAlavancas(periodKey, viewKey, period, data); }catch(e){}
+
+  document.getElementById('updatedAt').textContent = period.updatedAt + " • Visão " + viewKey;
+  document.getElementById('sectionName').textContent = (viewKey === "mensal" ? "Metas e Realizado (Mensal)" : "Metas e Realizado (Anual)");
+  document.getElementById('subtitle').textContent = `Período: ${period.label} • ${viewKey === "mensal" ? "Visão mensal" : period[viewKey].label}`;
+
+  // KPIs
+  const kpiGrid = document.getElementById('kpiGrid');
+  kpiGrid.innerHTML = "";
+  const t = data.totals;
+  const kpis = [
+    { label:"Faturamento (Realizado)", value: brl(t.realizado), mini:`Meta: ${brl(t.meta)} • Falta: ${brl(t.falta)}`, span:"span-3" },
+    { label:"% da Meta (Total)", value: pct(t.pct,1), mini:`Kg: ${t.kg ? num(t.kg,0) : "—"}`, span:"span-3" },
+    { label:"Lucro Bruto", value: brl(data.resultado.lucroBrutoReal), mini:`Prev: ${brl(data.resultado.lucroBrutoPrev)}`, span:"span-3" },
+    { label:"Custo total operação", value: brl(data.resultado.custoOperReal), mini:`Orçado: ${brl(data.resultado.custoOperPrev)}`, span:"span-3" },
+    { label:"Custo médio / Kg", value: brl(data.resultado.custoKgReal), mini:`Orçado/kg: ${brl(data.resultado.custoKgPrev)}`, span:"span-3" },
+    { label:"Margem bruta / Kg", value: brl(data.resultado.margemKgReal), mini:`Prev/kg: ${brl(data.resultado.margemKgPrev)}`, span:"span-3" },
+    { label:"Juros + tarifas", value: brl((data.despesas||[]).find(x=>x.name.startsWith('Juros'))?.pago || 0), mini:`Orçado: ${brl((data.despesas||[]).find(x=>x.name.startsWith('Juros'))?.orcado || 0)}`, span:"span-3" },
+  ];
+  kpis.forEach(k => {
+    const d = document.createElement('div');
+    d.className = `card ${k.span}`;
+    d.innerHTML = `<div class="label">${k.label}</div><div class="value">${k.value}</div><div class="mini">${k.mini}</div>`;
+    kpiGrid.appendChild(d);
+  });
+
+    // Charts
+  const barWrap = document.getElementById('barChartWrap');
+  const pieWrap = document.getElementById('pieChartWrap');
+  const shareWrap = document.getElementById('shareChartWrap');
+
+  // Bar chart (famílias) deve continuar mesmo sem os gráficos de pizza
+  if(barWrap){
+const chartItems = data.families.map(f => ({name:f.name, meta:f.meta, realizado:f.realizado}));
+    renderBarChart(barWrap, chartItems);
+    // (removido) gráfico pizza Meta x Realizado
+    if(shareWrap){
+      const shareItems = data.families.map(f => ({name:f.name, value: f.realizado || 0})).sort((a,b)=>b.value-a.value);
+      renderShareChart(shareWrap, shareItems);
+    }
+  }
+
+  // Margin % and Trend charts
+  const marginPctWrap = document.getElementById('marginPctChartWrap');
+  if(marginPctWrap){
+    const byName = {};
+    (data.margins || []).forEach(m => { if(m.name && m.name !== "Total") byName[m.name] = m; });
+    const marginPctItems = data.families.map(f => {
+      const mg = byName[f.name];
+      const lucro = mg ? (mg.lucroBruto || 0) : 0;
+      const rec = f.realizado || 0;
+      const pctv = rec > 0 ? (lucro/rec*100) : 0;
+      return {name:f.name, valuePct:pctv};
+    });
+    renderMarginPctChart(marginPctWrap, marginPctItems);
+  }
+
+  const trendWrap = document.getElementById('trendLineWrap');
+  if(trendWrap){
+    // Usa os totais mensais disponíveis no DATA (mensal)
+    const points = [];
+    const map = [
+      {key:'dez25', label:'Dez/25'},
+      {key:'jan26', label:'Jan/26'}
+    ];
+    map.forEach(p => {
+      const src = DATA[p.key]?.mensal?.totals;
+      if(src && typeof src.realizado === 'number') points.push({label:p.label, value:src.realizado});
+    });
+    renderLineChart(trendWrap, points);
+  }
+
+  // Family table
+  const rows = document.getElementById('familyRows');
+  rows.innerHTML = "";
+  data.families.forEach(f => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${f.name}</td>
+      <td class="right">${brl(f.meta)}</td>
+      <td class="right">${brl(f.realizado)}</td>
+      <td class="right">
+        <span class="${pillClassForPct(f.pct)}">${pct(f.pct,1)}</span>
+      </td>
+      <td class="right">${f.falta ? brl(f.falta) : (f.pct>=100 ? "Meta batida" : brl(0))}</td>
+      <td class="right">${f.kg ? num(f.kg,0) : "—"}</td>
+    `;
+    rows.appendChild(tr);
+  });
+
+  // Margins table
+  const mrows = document.getElementById('marginRows');
+  mrows.innerHTML = "";
+  data.margins.forEach(m => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${m.name}</td>
+      <td class="right">${m.precoMedio != null ? brl(m.precoMedio) : "—"}</td>
+      <td class="right">${brl(m.lucroBruto)}</td>
+      <td class="right">${m.margemKg != null ? brl(m.margemKg) : "—"}</td>
+    `;
+    mrows.appendChild(tr);
+  });
+
+  // Meta badges
+  const badges = document.getElementById('metaBadges');
+  badges.innerHTML = "";
+  data.families.forEach(f => {
+    const s = document.createElement('span');
+    const cls = pillClassForPct(f.pct);
+    s.className = cls;
+    s.textContent = (f.pct >= 100) ? `${f.name}: meta batida` : `${f.name}: ${pct(f.pct,1)}`;
+    badges.appendChild(s);
+  });
+
+  // Opex table
+  const orows = document.getElementById('opexRows');
+  orows.innerHTML = "";
+  data.despesas.forEach(o => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${o.name}</td>
+      <td class="right">${brl(o.orcado)}</td>
+      <td class="right">${brl(o.pago)}</td>
+      <td class="right"><span class="${pillClassForPct(o.pct)}">${pct(o.pct,0)}</span></td>
+      <td class="right">${o.custoKg != null ? brl(o.custoKg) : "—"}</td>
+    `;
+    orows.appendChild(tr);
+  });
+
+  // Result cards
+  const r = data.resultado;
+  document.getElementById('grossProfit').textContent = brl(r.lucroBrutoReal);
+  document.getElementById('grossMini').innerHTML = `<span class="pill ${pillClassForPct((r.lucroBrutoReal/r.lucroBrutoPrev)*100)}">Prev: ${brl(r.lucroBrutoPrev)}</span>
+                                                    <span class="pill">Margem/kg: ${brl(r.margemKgReal)}</span>`;
+
+  document.getElementById('totalCost').textContent = brl(r.custoOperReal);
+  document.getElementById('costMini').innerHTML = `<span class="pill">${viewKey==="mensal" ? "Orçado" : "Orçado"}: ${brl(r.custoOperPrev)}</span>
+                                                   <span class="pill">Custo/kg: ${brl(r.custoKgReal)}</span>`;
+
+  document.getElementById('netResult').textContent = brl(r.netReal);
+  document.getElementById('netMini').innerHTML = `<span class="${signPill(r.netReal)}">${r.netReal>=0 ? "Resultado positivo" : "Resultado negativo"}</span>
+                                                  <span class="pill">Margem líquida/kg: ${brl(r.netKgReal)}</span>`;
+
+  // Total meta bar
+  setBars(t.pct);
+  document.getElementById('totalPctPill').className = pillClassForPct(t.pct);
+  document.getElementById('totalPctPill').textContent = `Atingido: ${pct(t.pct,1)}`;
+  document.getElementById('totalGapPill').className = "pill";
+  document.getElementById('totalGapPill').textContent = `Falta: ${brl(t.falta)}`;
+
+  // Projeção de contas em aberto (Matéria-prima + Mão de obra + Despesas)
+  const P = data.projecao;
+  const hasProj = (viewKey === "mensal" && P);
+  const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  if(hasProj){
+    setTxt('cpvPago', brl(P.cpv.pago));
+    setTxt('cpvApagar', brl(P.cpv.aPagar));
+    setTxt('cpvProj', brl(P.cpv.projMes));
+
+    setTxt('opPago', brl(P.despesasOper.pago));
+    setTxt('opApagar', brl(P.despesasOper.aPagar));
+    setTxt('opProj', brl(P.despesasOper.projMes));
+
+    setTxt('totPago', brl(P.total.pago));
+    setTxt('totApagar', brl(P.total.aPagar));
+    setTxt('totProj', brl(P.total.projMes));
+
+    const notes = document.getElementById('projNotes');
+    if(notes){
+      const gm = (P.grossMarginPct || 0) * 100;
+      notes.innerHTML = `<span class="pill">
+                         <span class="pill ${pillClassForPct((data.totals.realizado/P.faturamentoBreakEven)*100)}">
+                         <span class="pill ${signPill(-P.faturamentoAdicional)}">`;
+
+      const scen = document.getElementById('projScenarios');
+      if(scen){
+        const gm = (P.grossMarginPct || 0);
+        const netAtual = (r && typeof r.netReal === "number") ? r.netReal : 0;
+
+        // Cenários objetivos:
+        // 1) Break-even: fecha no zero (cobre despesas operacionais)
+        // 2) Positivo: fecha com +R$ 50 mil (acima do resultado atual)
+        const addBE   = (P.faturamentoBreakEven || 0);
+        const addPos  = (gm > 0) ? Math.max(0, (50000 - netAtual) / gm) : 0;
+
+        const mk = (title, add, badge) => {
+          const netEst = netAtual + (add * gm);
+          return `
+            <div class="scenario-card">
+              <div class="scenario-top">
+                <div class="scenario-title">${title}</div>
+                <span class="scenario-badge ${badge.c}">${badge.t}</span>
+              </div>
+              <div class="scenario-add">+ ${brl(add)}</div>
+              <div class="scenario-sub">Resultado estimado: <b>${brl(netEst)}</b></div>
+            </div>
+          `;
+        };
+
+        scen.innerHTML = `
+          <div class="scenario-grid">
+            ${mk("Break-even", addBE, {c:"warn", t:"Fecha no zero"})}
+            ${mk("Positivo (+R$ 50 mil)", addPos, {c:"ok", t:"Fecha positivo"})}
+          </div>
+        `;
+      }
+}
+  }else{
+    // limpa quando não aplicável
+    ['cpvPago','cpvApagar','cpvProj','opPago','opApagar','opProj','totPago','totApagar','totProj'].forEach(id=>setTxt(id,'—'));
+    const notes = document.getElementById('projNotes'); if(notes) notes.innerHTML = '';
+    const scen = document.getElementById('projScenarios'); if(scen) scen.innerHTML = '';
+  }
+
+
+
+  // Projection + YoY (only meaningful for Jan/2026 mensal, but we show whenever possible)
+  const projRows = document.getElementById('projKpiRows');
+  const weeklyWrap = document.getElementById('weeklyLineWrap');
+  const yoyWrap = document.getElementById('yoyBarWrap');
+  const metaProjWrap = document.getElementById('metaProjWrap');
+
+  // Map current selection to a YYYY-MM key for EXTRA
+  const monthKey = (periodKey === "jan26") ? "2026-01" : (periodKey === "dez25" ? "2025-12" : "");
+  const yoyKey = (viewKey === "mensal" && periodKey === "jan26") ? "2025-01" : null;
+
+  // Weekly projection (if we have weekly points)
+  if(weeklyWrap){
+    const points = (EXTRA.weekly[monthKey] || []).map(p => ({label:p.label, value:p.value}));
+    if(points.length){
+      renderLineChart(weeklyWrap, points);
+    }else{
+      weeklyWrap.innerHTML = '<div class="note">Sem dados semanais para este período.</div>';
+    }
+  }
+
+  // Projection KPI table
+  if(projRows){
+    projRows.innerHTML = "";
+    // weeks
+    const weeks = (EXTRA.weekly[monthKey] || []).length || 0;
+    const weeksInMonth = EXTRA.weekly.semanasMes || 4;
+
+    const realizedNow = t.realizado || 0;
+    const metaNow = t.meta || 0;
+
+    const avgWeek = weeks ? (realizedNow / weeks) : 0;
+    const proj = weeks ? (avgWeek * weeksInMonth) : 0;
+
+    const faltaProj = Math.max(0, metaNow - proj);
+    const pctProj = metaNow ? (proj/metaNow*100) : 0;
+
+    const yoyBase = yoyKey ? (EXTRA.yoy[yoyKey]?.totalRealizado || 0) : 0;
+    const yoyPct = yoyBase ? ((realizedNow - yoyBase) / yoyBase * 100) : 0;
+
+    const rows = [
+      ["Semanas decorridas", weeks ? String(weeks) : "—"],
+      ["Realizado (até agora)", brl(realizedNow)],
+      ["Média semanal", weeks ? brl(avgWeek) : "—"],
+      ["Projeção fechamento", weeks ? brl(proj) : "—"],
+      ["% da meta (projeção)", weeks ? (pctProj.toFixed(1)+"%") : "—"],
+      ["Falta p/ meta (proj.)", weeks ? brl(faltaProj) : "—"],
+      ["Jan/2025 (base YoY)", yoyKey ? brl(yoyBase) : "—"],
+      ["Crescimento YoY", yoyKey ? (yoyPct.toFixed(1)+"%") : "—"],
+    ];
+    rows.forEach(([k,v])=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${k}</td><td class="right">${v}</td>`;
+      projRows.appendChild(tr);
+    });
+
+    // Meta vs projection bar
+    if(metaProjWrap && weeks){
+      renderSimpleBarChart(metaProjWrap, [{name:"Meta", value: metaNow},{name:"Projeção", value: proj}]);
+    }else if(metaProjWrap){
+      metaProjWrap.innerHTML = '<div class="note">Sem dados semanais para projeção.</div>';
+    }
+
+    // YoY bar
+    if(yoyWrap && yoyKey){
+      renderSimpleBarChart(yoyWrap, [{name:"2025", value: yoyBase},{name:"2026", value: realizedNow}]);
+    }else if(yoyWrap){
+      yoyWrap.innerHTML = '<div class="note">YoY disponível para Jan/2026.</div>';
+    }
+  }
+
+  // Resumo executivo (30s)
+  const exec = document.getElementById('execSummary');
+  if(exec){
+    const fams = (data.families || []).slice();
+    const best = fams.reduce((a,b)=> ((a && a.pct || 0) >= (b && b.pct || 0)) ? a : b, fams[0]);
+    const worst = fams.reduce((a,b)=> ((a && a.pct || 0) <= (b && b.pct || 0)) ? a : b, fams[0]);
+
+    const costVsMarginBad = (r.custoKgReal != null && r.margemKgReal != null && r.custoKgReal > r.margemKgReal);
+    const netBad = (r.netReal != null && r.netReal < 0);
+
+    const focusName = (worst && worst.name) ? worst.name : "—";
+    const focusGap = (worst && worst.falta != null) ? brl(worst.falta) : "—";
+
+    const alertItems = [];
+    if(netBad) alertItems.push("Resultado operacional negativo");
+    if(costVsMarginBad) alertItems.push("Custo/kg acima da margem/kg (precisa de volume/mix/margem)");
+
+    const alertHtml = alertItems.length
+      ? `<div class="alert"><h3>⚠️ Pontos de atenção</h3><ul>${alertItems.map(x=>`<li>${x}</li>`).join("")}</ul></div>`
+      : `<div class="alert" style="border-color: rgba(53,208,127,.35); background: rgba(53,208,127,.08)"><h3>✅ Sem alertas críticos</h3><div class="note">Indicadores dentro do esperado no cenário atual.</div></div>`;
+
+    exec.innerHTML = `
+      <div class="kpi-rows">
+        <div class="kpi-row"><span>Realizado</span><span><strong>${brl(t.realizado)}</strong></span></div>
+        <div class="kpi-row"><span>% da meta</span><span><strong>${pct(t.pct,1)}</strong></span></div>
+        <div class="kpi-row"><span>Resultado operacional</span><span class="${netBad ? "status-bad" : "status-ok"}"><strong>${brl(r.netReal)}</strong></span></div>
+        <div class="kpi-row"><span>Margem/kg</span><span><strong>${brl(r.margemKgReal)}</strong></span></div>
+        <div class="kpi-row"><span>Custo/kg</span><span><strong>${brl(r.custoKgReal)}</strong></span></div>
+      </div>
+      <div style="height:10px"></div>
+      ${alertHtml}
+      <div style="height:10px"></div>
+      <div class="kpi-rows">
+        <div class="kpi-row"><span>Melhor % meta</span><span><strong>${(best && best.name) ? best.name : "—"}</strong> <span class="${pillClassForPct(best ? best.pct : null)}">${pct(best ? best.pct : null,1)}</span></span></div>
+        <div class="kpi-row"><span>Foco do dia</span><span><strong>${focusName}</strong> <span class="pill">Falta: ${focusGap}</span></span></div>
+      </div>
+    `;
+  }
+
+
+  document.getElementById('footnote').textContent = "" //
+    "Observação: painel em arquivo único (TV-friendly) para diretoria: metas, margens, custos, resultado, projeções e simulador. " +
+    "Quando você me mandar seus códigos/bases (vendedores, produtos, ABC, etc.), eu encaixo as seções e deixo com filtros e telas completas.";
+}
+
+
+let AUTO = true;
+let autoTimer = null;
+
+function startAuto(){
+  stopAuto();
+  AUTO = true;
+  const btn = document.getElementById('autoBtn');
+  if(btn) btn.textContent = "Auto: ON";
+  autoTimer = setInterval(() => {
+    const sel = document.getElementById('periodSelect');
+    if(!sel) return;
+    const vals = Array.from(sel.options).map(o=>o.value);
+    const idx = vals.indexOf(sel.value);
+    const next = vals[(idx+1) % vals.length];
+    sel.value = next;
+    render();
+  }, 10000);
+}
+function stopAuto(){
+  AUTO = false;
+  const btn = document.getElementById('autoBtn');
+  if(btn) btn.textContent = "Auto: OFF";
+  if(autoTimer){ clearInterval(autoTimer); autoTimer = null; }
+}
+
+
+let SIM = { priceAdj: 0, opexAdj: 0 };
+
+function renderSimulator(periodKey, viewKey, data){
+  const priceEl = document.getElementById('priceAdj');
+  const opexEl = document.getElementById('opexAdj');
+  const pricePill = document.getElementById('priceAdjPill');
+  const opexPill = document.getElementById('opexAdjPill');
+  const simBarWrap = document.getElementById('simBarWrap');
+  const simSummary = document.getElementById('simSummary');
+  const simAlerts = document.getElementById('simAlerts');
+
+  if(!priceEl || !opexEl || !simBarWrap || !simSummary || !simAlerts) return;
+
+  // Only meaningful for "mensal", but we allow in anual too (as scenario).
+  const priceAdj = SIM.priceAdj;
+  const opexAdj = SIM.opexAdj;
+
+  pricePill.textContent = `Ajuste aplicado: ${priceAdj}%`;
+  opexPill.textContent = `Redução aplicada: ${opexAdj}%`;
+
+  // Build base margin% by family from data.margins + families
+  const marginByName = {};
+  (data.margins || []).forEach(m => { if(m.name && m.name !== "Total") marginByName[m.name] = m; });
+
+  const items = (data.families || []).map(f => {
+    const baseReal = f.realizado || 0;
+    const meta = f.meta || 0;
+    const lucro = (marginByName[f.name]?.lucroBruto) || 0;
+    const baseMarginPct = baseReal ? (lucro/baseReal*100) : 0;
+
+    const realizadoSim = baseReal * (1 + priceAdj/100);
+    const margemSim = baseMarginPct + priceAdj - opexAdj;
+
+    return { name: f.name, meta, realizado: realizadoSim, baseReal, baseMarginPct, margemSim };
+  });
+
+  // Render chart (reuse renderBarChart which expects {name, meta, realizado})
+  renderBarChart(simBarWrap, items.map(it => ({name: it.name, meta: it.meta, realizado: it.realizado})));
+
+  const totalMeta = items.reduce((a,b)=>a + b.meta, 0);
+  const totalReal = items.reduce((a,b)=>a + b.realizado, 0);
+  const statusOk = totalReal >= totalMeta;
+
+  simSummary.innerHTML = `
+    <div class="kpi-row"><span>Meta total</span><span>${brl(totalMeta)}</span></div>
+    <div class="kpi-row"><span>Realizado simulado</span><span>${brl(totalReal)}</span></div>
+    <div class="kpi-row"><span>Status</span><span class="${statusOk ? "status-ok" : "status-bad"}"><strong>${statusOk ? "Meta atingida" : "Abaixo da meta"}</strong></span></div>
+  `;
+
+  // Alerts: margem < 10% OR realizado < 80% da meta
+  const alerts = items.filter(it => (it.margemSim < 10) || (it.meta ? it.realizado < it.meta*0.8 : false));
+  if(alerts.length){
+    const lis = alerts.map(a => `<li>${a.name}: margem ${a.margemSim.toFixed(1)}% ou realizado abaixo do esperado</li>`).join("");
+    simAlerts.innerHTML = `<div class="alert"><h3>⚠️ Alertas críticos</h3><ul>${lis}</ul></div>`;
+  }else{
+    simAlerts.innerHTML = `<div class="alert" style="border-color: rgba(53,208,127,.35); background: rgba(53,208,127,.08)"><h3>✅ Sem alertas críticos</h3><div class="note">Margens e realizado dentro do esperado com o cenário atual.</div></div>`;
+  }
+}
+
+// Fullscreen
+document.getElementById('autoBtn').addEventListener('click', () => {
+  if(AUTO) stopAuto(); else startAuto();
+});
+
+startAuto();
+
+document.getElementById('fullscreenBtn').addEventListener('click', async () => {
+  try{
+    if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+    else await document.exitFullscreen();
+  }catch(e){ alert("Não foi possível ativar tela cheia neste navegador."); }
+});
+
+document.getElementById('periodSelect').addEventListener('change', render);
+document.getElementById('viewSelect').addEventListener('change', render);
+
+// Simulator controls
+const priceEl = document.getElementById('priceAdj');
+const opexEl = document.getElementById('opexAdj');
+if(priceEl){ priceEl.addEventListener('input', (e)=>{ SIM.priceAdj = Number(e.target.value||0); render(); }); }
+if(opexEl){ opexEl.addEventListener('input', (e)=>{ SIM.opexAdj = Number(e.target.value||0); render(); }); }
+
+window.addEventListener('resize', () => { try{ render(); }catch(e){} });
+
+render();
+</script>
+<script>
+function updateDRETitle() {
+  const titleEl = document.getElementById("dreTitle");
+  if (!titleEl) return;
+
+  // regra simples e segura:
+  // se o texto do período contiver "parcial", consideramos mês em aberto
+  const periodInfo = document.body.innerText.toLowerCase();
+  const mesEmAberto = periodInfo.includes("parcial");
+
+  titleEl.textContent = mesEmAberto
+    ? "Projeção do DRE sobre o Resultado Parcial"
+    : "Projeção do DRE sobre o Resultado Operacional";
+}
+
+// garantir atualização após render
+document.addEventListener("DOMContentLoaded", updateDRETitle);
+</script>
+</body>
+</html>
